@@ -12,6 +12,9 @@ object Executor {
         return when (act.name) {
             "open_app", "open" -> Device.openApp(act.str("app").ifBlank { act.str("name") }, lang)
             "call", "dial" -> Device.call(act.str("to").ifBlank { act.str("name") }, lang)
+            "play_music", "play_song", "music" -> Device.playMusic(
+                act.str("query").ifBlank { act.str("song") }, act.str("provider"), lang
+            )
             "whatsapp", "send_whatsapp", "message" ->
                 Device.whatsapp(act.str("to").ifBlank { act.str("name") }, act.str("text").ifBlank { act.str("msg") }, lang)
             "alarm" -> Device.alarm(act.intOrNull("hour") ?: -1, act.intOrNull("minute") ?: 0, act.str("label"), lang)
