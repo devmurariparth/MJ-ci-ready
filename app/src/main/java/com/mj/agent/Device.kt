@@ -35,11 +35,61 @@ object Device {
 
     fun call(to: String, lang: Lang): Res {
         val c = ctx()
-        val hit = Contacts.find(c, to) ?: return Res(false, S.contactNotFound(lang, to), true)
-        val uri = Uri.parse("tel:" + Uri.encode(hit.second))
-        val granted = ContextCompat.checkSelfPermission(c, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
-        val i = Intent(if (granted) Intent.ACTION_CALL else Intent.ACTION_DIAL, uri)
-        return if (launch(i)) Res(true, S.calling(lang, hit.first), true) else Res(false, S.failed(lang), true)
+        if (!Contacts.isNumber(to) && !Contacts.hasReadPermission(c)) {
+            return Res(false, S.contactsPermission(lang), true)
+        }
+        val hit = Contacts.find(c, to)
+            ?: return Res(false, S.contactNotFound(lang, to), true)
+
+        // Use the system dialer so the user can verify the contact/number
+        // and explicitly press Call. Never place an unexpected direct call.
+        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", hit.second, null))
+        return if (launch(dialIntent)) {
+            Res(true, S.dialerOpened(lang, hit.first, hit.second), true)
+        } else {
+            Res(false, S.failed(lang), true)
+        }
+    }
+
+    fun playMusic(query: String, provider: String, lang: Lang): Res {
+        val c = ctx()
+        val q = query.trim().ifBlank { "music" }
+        val requested = provider.trim().lowercase()
+        val spotifyUrl = Uri.parse("https://open.spotify.com/search/${Uri.encode(q)}")
+        val youtubeUrl = Uri.parse("https://www.youtube.com/results?search_query=${Uri.encode(q)}")
+        val youtubeMusicUrl = Uri.parse("https://music.youtube.com/search?q=${Uri.encode(q)}")
+
+        fun tryOpen(uri: Uri, packageName: String? = null): Boolean {
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            if (!packageName.isNullOrBlank()) intent.setPackage(packageName)
+            return launch(intent)
+        }
+
+        val opened = when {
+            requested.contains("spotify") -> {
+                tryOpen(Uri.parse("spotify:search:${Uri.encode(q)}"), "com.spotify.music") ||
+                    tryOpen(spotifyUrl, "com.spotify.music") ||
+                    tryOpen(spotifyUrl)
+            }
+            requested.contains("youtube music") || requested.contains("yt music") -> {
+                tryOpen(youtubeMusicUrl, "com.google.android.apps.youtube.music") ||
+                    tryOpen(youtubeMusicUrl)
+            }
+            requested.contains("youtube") -> {
+                tryOpen(youtubeUrl, "com.google.android.youtube") || tryOpen(youtubeUrl)
+            }
+            Apps.hasPkg("com.spotify.music") -> {
+                tryOpen(Uri.parse("spotify:search:${Uri.encode(q)}"), "com.spotify.music") ||
+                    tryOpen(spotifyUrl, "com.spotify.music") || tryOpen(spotifyUrl)
+            }
+            Apps.hasPkg("com.google.android.youtube") -> {
+                tryOpen(youtubeUrl, "com.google.android.youtube") || tryOpen(youtubeUrl)
+            }
+            else -> tryOpen(youtubeUrl)
+        }
+
+        return if (opened) Res(true, S.musicSearchOpened(lang, q), true)
+        else Res(false, S.musicAppUnavailable(lang), true)
     }
 
     suspend fun whatsapp(to: String, text: String, lang: Lang): Res {
