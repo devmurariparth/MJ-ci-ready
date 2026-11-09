@@ -7,6 +7,9 @@ import android.provider.ContactsContract
 import androidx.core.content.ContextCompat
 
 object Contacts {
+    fun hasReadPermission(ctx: Context): Boolean =
+        ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+
     fun isNumber(s: String): Boolean {
         val d = s.replace(Regex("[\\s\\-()+]"), "")
         return d.length >= 6 && d.all { it.isDigit() }
@@ -17,7 +20,7 @@ object Contacts {
         val q = query.trim()
         if (q.isEmpty()) return null
         if (isNumber(q)) return q to q
-        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) return null
+        if (!hasReadPermission(ctx)) return null
 
         val cursor = ctx.contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
