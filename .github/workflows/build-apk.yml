@@ -46,7 +46,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          yes | sdkmanager --licenses >/dev/null
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;36.0.0"
 
       - name: Set up Gradle 9.1.0 (no wrapper needed)
