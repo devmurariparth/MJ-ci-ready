@@ -99,7 +99,7 @@ object MJBrain {
 
     // ---------- status helpers ----------
 
-    private fun setStatus(s: String) {
+    private fun publishStatus(s: String) {
         status = s
         overlayMsg.value = s
     }
@@ -240,7 +240,7 @@ object MJBrain {
             try {
                 val quick = Router.quick(t)
                 if (quick != null) {
-                    setStatus(S.step(lang, 1))
+                    publishStatus(S.step(lang, 1))
                     val res = withContext(Dispatchers.Default) { Executor.run(quick, lang) }
                     reply(res.msg, lang)
                 } else if (!ensureModel()) {
@@ -277,7 +277,7 @@ object MJBrain {
     // ---------- chat ----------
 
     private suspend fun chat(text: String, lang: Lang) {
-        setStatus(S.thinking(lang))
+        publishStatus(S.thinking(lang))
         val hist = messages.dropLast(1).filter { it.kind == 0 }.map { it.fromUser to it.text }
         messages.add(Msg(false, ""))
         val idx = messages.lastIndex
@@ -304,7 +304,7 @@ object MJBrain {
         val compact = engine.maxTokens <= 1500
         val screenLimit = if (compact) 500 else 1100
         for (step in 1..MAX_STEPS) {
-            setStatus(S.step(lang, step))
+            publishStatus(S.step(lang, step))
             val svc = MJAccessibilityService.instance
             val screen = if (svc != null) withContext(Dispatchers.Main.immediate) { svc.snapshot(screenLimit) }
             else "(screen reading is OFF; use only call, whatsapp, alarm, timer, web, flashlight, settings, open_app, done)"
@@ -357,7 +357,7 @@ object MJBrain {
         }
         Speaker.stop()
         listening = true
-        setStatus(S.listening(l))
+        publishStatus(S.listening(l))
         Voice.start(
             app, l,
             onPartial = { overlayMsg.value = it },
