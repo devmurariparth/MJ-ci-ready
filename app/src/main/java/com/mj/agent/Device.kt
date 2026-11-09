@@ -1,6 +1,7 @@
 package com.mj.agent
 
 import android.Manifest
+import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,6 +9,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.provider.AlarmClock
+import android.provider.MediaStore
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
@@ -65,25 +67,47 @@ object Device {
             return launch(intent)
         }
 
+        fun tryMusicPlayback(packageName: String): Boolean {
+            val intent = Intent(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH).apply {
+                setPackage(packageName)
+                putExtra(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/*")
+                putExtra(SearchManager.QUERY, q)
+            }
+            return launch(intent)
+        }
+
+        fun tryVideoPlayback(packageName: String): Boolean {
+            val intent = Intent(MediaStore.INTENT_ACTION_VIDEO_PLAY_FROM_SEARCH).apply {
+                setPackage(packageName)
+                putExtra(SearchManager.QUERY, q)
+            }
+            return launch(intent)
+        }
+
         val opened = when {
             requested.contains("spotify") -> {
-                tryOpen(Uri.parse("spotify:search:${Uri.encode(q)}"), "com.spotify.music") ||
+                tryMusicPlayback("com.spotify.music") ||
+                    tryOpen(Uri.parse("spotify:search:${Uri.encode(q)}"), "com.spotify.music") ||
                     tryOpen(spotifyUrl, "com.spotify.music") ||
                     tryOpen(spotifyUrl)
             }
             requested.contains("youtube music") || requested.contains("yt music") -> {
-                tryOpen(youtubeMusicUrl, "com.google.android.apps.youtube.music") ||
+                tryMusicPlayback("com.google.android.apps.youtube.music") ||
+                    tryOpen(youtubeMusicUrl, "com.google.android.apps.youtube.music") ||
                     tryOpen(youtubeMusicUrl)
             }
             requested.contains("youtube") -> {
-                tryOpen(youtubeUrl, "com.google.android.youtube") || tryOpen(youtubeUrl)
+                tryVideoPlayback("com.google.android.youtube") ||
+                    tryOpen(youtubeUrl, "com.google.android.youtube") || tryOpen(youtubeUrl)
             }
             Apps.hasPkg("com.spotify.music") -> {
-                tryOpen(Uri.parse("spotify:search:${Uri.encode(q)}"), "com.spotify.music") ||
+                tryMusicPlayback("com.spotify.music") ||
+                    tryOpen(Uri.parse("spotify:search:${Uri.encode(q)}"), "com.spotify.music") ||
                     tryOpen(spotifyUrl, "com.spotify.music") || tryOpen(spotifyUrl)
             }
             Apps.hasPkg("com.google.android.youtube") -> {
-                tryOpen(youtubeUrl, "com.google.android.youtube") || tryOpen(youtubeUrl)
+                tryVideoPlayback("com.google.android.youtube") ||
+                    tryOpen(youtubeUrl, "com.google.android.youtube") || tryOpen(youtubeUrl)
             }
             else -> tryOpen(youtubeUrl)
         }
