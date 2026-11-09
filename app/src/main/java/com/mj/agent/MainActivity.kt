@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
 
     private fun askPermissions() {
         permLauncher.launch(
-            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE, Manifest.permission.CAMERA)
+            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_CONTACTS, Manifest.permission.CAMERA)
         )
     }
 
