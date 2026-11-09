@@ -24,6 +24,7 @@ object Apps {
 
     private val table: List<Triple<String, List<String>, List<String>>> = listOf(
         Triple("whatsapp", listOf("whatsapp", "whats app", "વોટ્સએપ", "વ્હોટ્સએપ", "વૉટ્સએપ", "वॉट्सऐप", "व्हाट्सएप", "व्हाट्सऐप", "वाट्सएप"), listOf("com.whatsapp", "com.whatsapp.w4b")),
+        Triple("youtube music", listOf("youtube music", "yt music", "યુટ્યુબ મ્યુઝિક", "यूट्यूब म्यूजिक", "यूट्यूब म्यूज़िक"), listOf("com.google.android.apps.youtube.music")),
         Triple("youtube", listOf("youtube", "you tube", "યુટ્યુબ", "यूट्यूब"), listOf("com.google.android.youtube")),
         Triple("chrome", listOf("chrome", "browser", "ક્રોમ", "બ્રાઉઝર", "क्रोम", "ब्राउज़र"), listOf("com.android.chrome")),
         Triple("camera", listOf("camera", "કેમેરા", "कैमरा"), listOf("com.google.android.GoogleCamera", "com.android.camera2", "com.sec.android.app.camera", "com.miui.camera")),
