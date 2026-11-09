@@ -58,9 +58,7 @@ object Router {
             "play ", "listen to ", "put on ", "chalao", "chala", "vagado", "vagadu",
             "bajao", "વગાડ", "ચાલાવો", "બજાવો", "चलाओ", "बजाओ"
         ).any { t.contains(it) }
-        val providerMention = listOf("spotify", "youtube", "youtube music", "સ્પોટિફાય", "યુટ્યુબ", "स्पॉटिफाई", "यूट्यूब")
-            .any { t.contains(it) }
-        if (!hasPlayIntent && !providerMention) return null
+        if (!hasPlayIntent) return null
 
         val provider = when {
             t.contains("spotify") || t.contains("સ્પોટિફાય") || t.contains("स्पॉटिफाई") -> "spotify"
