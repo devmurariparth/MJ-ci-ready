@@ -1,4 +1,4 @@
-name: Build Expanded MJ and Release v0.6.0
+name: Build Expanded MJ and Release v0.6.1
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: mj-expanded-release-v0.6.0
+  group: mj-expanded-release-v0.6.1
   cancel-in-progress: false
 
 jobs:
@@ -57,6 +57,12 @@ jobs:
         with:
           cache-read-only: false
 
+      - name: Restore stable MJ debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: mj-v06-debug-signing-key-v1
+
       - name: Run unit tests, lint and build debug APK
         working-directory: mj-source
         run: ./gradlew testDebugUnitTest :app:lintDebug assembleDebug --stacktrace
@@ -66,33 +72,35 @@ jobs:
         run: |
           set -euo pipefail
           test -s mj-source/app/build/outputs/apk/debug/app-debug.apk
-          cp mj-source/app/build/outputs/apk/debug/app-debug.apk MJ-v0.6.0.apk
-          ls -lh MJ-v0.6.0.apk
+          cp mj-source/app/build/outputs/apk/debug/app-debug.apk MJ-v0.6.1.apk
+          ls -lh MJ-v0.6.1.apk
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v7
         with:
-          name: MJ-v0.6.0-debug-APK
-          path: MJ-v0.6.0.apk
+          name: MJ-v0.6.1-debug-APK
+          path: MJ-v0.6.1.apk
           if-no-files-found: error
           retention-days: 30
 
       - name: Publish GitHub Release with expanded MJ APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.6.0
-          name: MJ v0.6.0
+          tag_name: v0.6.1
+          name: MJ v0.6.1
           body: |
-            MJ Android test release (versionName 0.6.0, versionCode 6).
+            MJ Android test release (versionName 0.6.1, versionCode 7).
 
             Built from the expanded source repository: devmurariparth/pikachu.
 
+            This release installs side-by-side with the earlier com.mj.agent package as com.mj.agent.v06, so you can keep the previous MJ app and its private app data while testing the expanded build.
+
             Included source capabilities: premium animated assistant orb and chat UI; Gujarati, Hindi and English normalization; local command routing; typed action/tool contracts; permission and policy gate; contact disambiguation and call flow; Spotify, YouTube and YouTube Music provider handling; WhatsApp and SMS intents; task/reminder features; memory controls; vision consent flow; and Android system voice-interaction entry point.
 
-            Important limitations: selecting MJ as the default digital assistant is a separate user-controlled Android setting. This release does not implement an always-listening "Hey MJ" hotword. Music providers may open a search/result view rather than guarantee automatic playback. Phone calling requires the appropriate user-granted Contacts/Phone permissions.
+            Important limitations: selecting MJ as the default digital assistant is a separate user-controlled Android setting. This is not an always-listening "Hey MJ" hotword. Music providers may open a search/result view rather than guarantee automatic playback. Phone calling requires the appropriate user-granted Contacts/Phone permissions.
 
             This is a debug-signed testing APK, not a production Play Store release.
-          files: MJ-v0.6.0.apk
+          files: MJ-v0.6.1.apk
           fail_on_unmatched_files: true
           overwrite_files: true
           make_latest: true
