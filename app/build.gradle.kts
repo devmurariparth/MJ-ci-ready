@@ -9,8 +9,8 @@ android {
         applicationId = "com.mj.agent"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
         ndk { abiFilters += listOf("arm64-v8a") }
     }
     buildFeatures { compose = true }

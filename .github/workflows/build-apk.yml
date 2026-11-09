@@ -83,10 +83,12 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.4.0
-          name: MJ v0.4.0
+          tag_name: v0.5.0
+          name: MJ v0.5.0
           body: |
-            MJ Android debug build (versionName 0.4.0, versionCode 4).
+            MJ Android debug build (versionName 0.5.0, versionCode 5).
+
+            Includes the iOS-inspired animated interface and the phone/music routing improvements.
 
             This is a debug/test APK for installation and testing. It is not a production-signed release.
           files: ${{ env.MJ_DIR }}/app/build/outputs/apk/debug/*.apk
