@@ -16,6 +16,10 @@ object S {
     fun opened(l: Lang, app: String) = tr(l, "Opened $app", "$app ખોલ્યું", "$app खोल दिया")
     fun appNotFound(l: Lang, app: String) = tr(l, "App '$app' not found", "'$app' નામની એપ મળી નહીં", "'$app' नाम का ऐप नहीं मिला")
     fun calling(l: Lang, n: String) = tr(l, "Calling $n", "$n ને ફોન કરું છું", "$n को कॉल कर रहा हूँ")
+    fun contactsPermission(l: Lang) = tr(l, "Allow Contacts permission so MJ can find this person.", "આ વ્યક્તિને શોધવા MJ ને Contacts પરવાનગી આપો.", "इस व्यक्ति को ढूँढने के लिए MJ को Contacts अनुमति दें।")
+    fun dialerOpened(l: Lang, n: String, number: String) = tr(l, "Dialer opened for $n ($number). Review it and tap Call to place the call.", "$n ($number) માટે Dialer ખોલ્યું છે. નંબર ચકાસીને Call દબાવો.", "$n ($number) के लिए Dialer खुल गया है। नंबर जाँचें और कॉल करने के लिए Call दबाएँ।")
+    fun musicSearchOpened(l: Lang, q: String) = tr(l, "Music search opened for \"$q\". Choose a track in the music app to start playback.", "\"$q\" માટે music search ખોલ્યું છે. ગીત પસંદ કરીને વગાડો.", "\"$q\" के लिए music search खुल गई है। गाना चुनकर चलाएँ।")
+    fun musicAppUnavailable(l: Lang) = tr(l, "Could not open a music app or music search. Install Spotify or YouTube and try again.", "Music app અથવા music search ખોલી શકાઈ નહીં. Spotify અથવા YouTube install કરીને ફરી પ્રયાસ કરો.", "Music app या music search नहीं खुली। Spotify या YouTube install करके फिर कोशिश करें।")
     fun contactNotFound(l: Lang, n: String) = tr(
         l, "Contact '$n' was not found or has multiple matches (check Contacts permission and use the full name)",
         "'$n' નામનો કોન્ટેક્ટ મળ્યો નહીં અથવા એકથી વધુ મેળ મળ્યા (કોન્ટેક્ટ્સ પરવાનગી તપાસો અને પૂરું નામ બોલો)",
@@ -79,7 +83,7 @@ object S {
     // UI labels
     fun setupTitle(l: Lang) = tr(l, "Setup", "સેટઅપ", "सेटअप")
     fun uModel(l: Lang) = tr(l, "AI model", "AI મોડેલ", "AI मॉडल")
-    fun uPerms(l: Lang) = tr(l, "Mic, Contacts, Phone and Camera permissions", "માઇક, કોન્ટેક્ટ્સ, ફોન અને કેમેરા પરવાનગી", "माइक, कॉन्टैक्ट्स, फ़ोन और कैमरा अनुमति")
+    fun uPerms(l: Lang) = tr(l, "Microphone, Contacts and Camera permissions", "માઇક્રોફોન, કોન્ટેક્ટ્સ અને કેમેરાની પરવાનગી", "माइक्रोफ़ोन, कॉन्टैक्ट्स और कैमरा अनुमति")
     fun uA11y(l: Lang) = tr(l, "Accessibility (phone control)", "Accessibility (ફોન કંટ્રોલ)", "Accessibility (फ़ोन कंट्रोल)")
     fun aImport(l: Lang) = tr(l, "Import", "Import કરો", "Import करें")
     fun aAllow(l: Lang) = tr(l, "Allow", "આપો", "दें")
