@@ -83,10 +83,10 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.3.0
-          name: MJ v0.3.0
+          tag_name: v0.4.0
+          name: MJ v0.4.0
           body: |
-            MJ Android debug build (versionName 0.3, versionCode 3).
+            MJ Android debug build (versionName 0.4.0, versionCode 4).
 
             This is a debug/test APK for installation and testing. It is not a production-signed release.
           files: ${{ env.MJ_DIR }}/app/build/outputs/apk/debug/*.apk
