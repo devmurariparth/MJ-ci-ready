@@ -1,4 +1,4 @@
-name: Build MJ debug APK
+name: Build and Release MJ APK
 
 on:
   workflow_dispatch:
@@ -7,12 +7,12 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -71,10 +71,25 @@ jobs:
           ls -l app/build/outputs/apk/debug/
           compgen -G "app/build/outputs/apk/debug/*.apk" >/dev/null
 
-      - name: Upload debug APK
+      - name: Upload debug APK as workflow artifact
         uses: actions/upload-artifact@v7
         with:
           name: MJ-debug-APK
           path: ${{ env.MJ_DIR }}/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish GitHub Release with APK
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.3.0
+          name: MJ v0.3.0
+          body: |
+            MJ Android debug build (versionName 0.3, versionCode 3).
+
+            This is a debug/test APK for installation and testing. It is not a production-signed release.
+          files: ${{ env.MJ_DIR }}/app/build/outputs/apk/debug/*.apk
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          make_latest: true
