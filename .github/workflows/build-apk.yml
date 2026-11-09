@@ -57,12 +57,6 @@ jobs:
         with:
           cache-read-only: false
 
-      - name: Restore stable MJ debug signing key
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: mj-v06-debug-signing-key-v1
-
       - name: Run unit tests, lint and build debug APK
         working-directory: mj-source
         run: ./gradlew testDebugUnitTest :app:lintDebug assembleDebug --stacktrace
