@@ -1,0 +1,13 @@
+name: CI smoke test
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm GitHub runner
+        run: echo "GitHub Actions runner started successfully"
