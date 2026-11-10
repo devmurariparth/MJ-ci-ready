@@ -92,6 +92,78 @@ object Router {
         return Act("play_music", JSONObject().put("query", query).put("provider", provider))
     }
 
+    private fun mediaControlAction(t: String): Act? {
+        val action = when {
+            listOf("next song", "next track", "skip song", "skip track", "aagal nu song", "bija song",
+                "આગળનું ગીત", "આગળનું ગાણું", "આગળનું સોંગ", "अगला गाना", "अगला गीत").any(t::contains) -> "next"
+            listOf("previous song", "previous track", "last song", "pachhal nu song",
+                "પહેલાનું ગીત", "પાછળનું ગીત", "પાછળનું ગાણું", "पिछला गाना", "पिछला गीत").any(t::contains) -> "previous"
+            listOf("pause music", "pause song", "stop music", "music stop", "song bandh",
+                "ગીત બંધ", "સંગીત બંધ", "ગાણું બંધ", "गाना रोक", "गाना बंद", "संगीत रोक").any(t::contains) -> "pause"
+            listOf("resume music", "resume song", "continue music", "continue song", "music chalu",
+                "ગીત ચાલુ", "સંગીત ચાલુ", "गाना चालू", "संगीत चालू").any(t::contains) -> "resume"
+            else -> null
+        } ?: return null
+        return Act("media_control", JSONObject().put("action", action))
+    }
+
+    private fun volumeAction(t: String): Act? {
+        val hasVolumeCue = listOf("volume", "awaj", "avaj", "avaz", "sound", "mute", "unmute",
+            "વોલ્યુમ", "આવાજ", "आवाज़", "आवाज").any(t::contains)
+        if (!hasVolumeCue) return null
+        val numeric = Regex("""(?:volume|વોલ્યુમ|આવાજ|आवाज़|आवाज).*?(\d{1,3})\s*%?""").find(t)
+            ?: Regex("""(\d{1,3})\s*(?:percent|પ્રતિશત|प्रतिशत|%)""").find(t)
+        val mode = when {
+            numeric != null -> "set:" + (numeric.groupValues[1].toIntOrNull() ?: 0)
+            listOf("unmute", "un-mute", "sound on", "awaj chalu", "આવાજ ચાલુ", "आवाज़ चालू").any(t::contains) -> "unmute"
+            listOf("mute", "silent", "zero", "આવાજ બંધ", "आवाज़ बंद").any(t::contains) -> "mute"
+            listOf("full", "maximum", "max").any(t::contains) -> "max"
+            listOf("down", "decrease", "lower", "low", "less", "ochho", "ochu", "ocho", "ghatad",
+                "ઓછો", "ઘટાડ", "कम", "घटाओ").any(t::contains) -> "down"
+            else -> "up"
+        }
+        return Act("volume", JSONObject().put("mode", mode))
+    }
+
+    private fun alarmOrTimerAction(t: String): Act? {
+        val alarmCue = listOf("alarm", "અલાર્મ", "અલારમ", "अलार्म").any(t::contains)
+        val alarmVerb = listOf("set", "create", "start", "laga", "lagao", "laga do", "kar", "karo",
+            "muk", "muko", "મૂક", "સેટ કર", "લગાવ", "लगाओ", "लगाकर").any(t::contains)
+        if (alarmCue && alarmVerb) {
+            val match = Regex("""(?:^|\s)(\d{1,2})(?:[:.](\d{2})|\s+(\d{2}))?\s*(am|pm)?(?=\s|$)""").find(t)
+            if (match != null) {
+                var hour = match.groupValues[1].toIntOrNull() ?: return null
+                val minute = (match.groupValues[2].ifBlank { match.groupValues[3] }).toIntOrNull() ?: 0
+                val suffix = match.groupValues[4]
+                if (minute !in 0..59) return null
+                if (suffix.isNotBlank()) {
+                    if (hour !in 1..12) return null
+                    if (suffix == "am" && hour == 12) hour = 0
+                    if (suffix == "pm" && hour in 1..11) hour += 12
+                }
+                if (hour !in 0..23) return null
+                return Act("alarm", JSONObject().put("hour", hour).put("minute", minute).put("label", "MJ"))
+            }
+        }
+
+        val timerCue = listOf("timer", "ટાઈમર", "ટાઇમર", "टाइमर").any(t::contains)
+        if (timerCue) {
+            val hours = Regex("""(\d+)\s*(?:hours?|hrs?|hr|h|કલાક|घंटे|घंटा)""").find(t)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            val minutes = Regex("""(\d+)\s*(?:minutes?|mins?|min|મિનિટ|मिनट|मिनटों)""").find(t)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            val seconds = Regex("""(\d+)\s*(?:seconds?|secs?|sec|સેકન્ડ|सेकंड)""").find(t)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            val hasUnits = hours > 0 || minutes > 0 || seconds > 0
+            val total = if (hasUnits) hours * 3600 + minutes * 60 + seconds else {
+                Regex("""(?:timer.*?(\d+)|(\d+).*?timer)""").find(t)?.let {
+                    (it.groupValues[1].ifBlank { it.groupValues[2] }).toIntOrNull()?.times(60)
+                } ?: 0
+            }
+            if (total > 0 && total <= 7 * 24 * 60 * 60) {
+                return Act("timer", JSONObject().put("seconds", total))
+            }
+        }
+        return null
+    }
+
     fun quick(text: String): Act? {
         val t = text.trim().trimEnd('.', '!', '?', '।').lowercase()
         if (t.isEmpty() || t.length > 120) return null
@@ -104,6 +176,9 @@ object Router {
         val callTo = callTarget(t)
         if (callTo != null) return Act("call", JSONObject().put("to", callTo))
 
+        mediaControlAction(t)?.let { return it }
+        volumeAction(t)?.let { return it }
+        alarmOrTimerAction(t)?.let { return it }
         musicAction(t)?.let { return it }
 
         val name = openEn.find(t)?.groupValues?.get(1) ?: openIn.find(t)?.groupValues?.get(1)
