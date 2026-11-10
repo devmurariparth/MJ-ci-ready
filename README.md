@@ -28,7 +28,7 @@ Android Studio may offer to install missing Android SDK components (the project 
 
 1. Complete Gradle sync and build.
 2. Connect an Android phone with USB debugging enabled and run the `app` configuration.
-3. In MJ's Setup card, grant the requested microphone, contacts, phone and camera permissions.
+3. Permissions are requested when needed. Grant microphone access for voice, contacts access when resolving a saved contact, and camera access when using the flashlight. Calls open the system dialer so you can verify and place the call yourself.
 4. Import a compatible MediaPipe `.task` LLM model. The file must be a valid MediaPipe LLM task bundle; renaming a regular model file to `.task` does not convert it.
 5. Enable MJ's Accessibility service to use screen reading, taps, typing and the floating orb. Android may require **App info → ⋮ → Allow restricted settings** for sideloaded apps.
 
@@ -45,10 +45,10 @@ Android Studio may offer to install missing Android SDK components (the project 
 - `set alarm for 6:45 AM` / `5 minutes timer`
 - `cricket score google par shodho`
 
-## Notes and limitations
+## Latest release: 3.0.2 (versionCode 7)\n\nThis update adds a user-reviewed WhatsApp draft flow, safer staged model replacement with rollback to the previous working model, and a complete Gradle 9.1.0 wrapper for local builds. The APK published by CI is debug-signed for testing, not a Play Store production build.\n\n## Notes and limitations
 
 - Voice activation is tap-to-talk; a background always-listening “Hey MJ” hotword service is not included in this project.
 - Gujarati/Hindi speech recognition and text-to-speech availability depends on language packs and the Android speech/TTS service installed on the phone.
-- WhatsApp opens the matched chat and attempts to press Send through Accessibility. When the Send button cannot be identified, MJ leaves the message ready for the user to send manually. Ambiguous contact matches are not guessed.
+- WhatsApp opens the matched chat with the message prefilled. MJ does not press Send; review the recipient and message, then send it yourself. Ambiguous contact matches are not guessed.\n- Model imports are copied to a temporary file and checked before replacement. If the new model fails to load, MJ restores the previous model.
 - A compatible on-device model is required for free-form chat and multi-step agent reasoning. App opening, calling, alarm, timer, flashlight, music search, volume and media-key fast-path commands can work without the model.
 - SimpMusic is handled through the standard Android media-search intent when supported; otherwise MJ opens SimpMusic. This does not guarantee that a track starts automatically.

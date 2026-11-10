@@ -15,9 +15,6 @@ import android.provider.Settings
 import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /** Intent aadhaarit device actions: call, whatsapp, alarm, timer, web, torch, settings. */
 object Device {
@@ -210,24 +207,31 @@ object Device {
         }
     }
 
-    suspend fun whatsapp(to: String, text: String, lang: Lang): Res {
+    /**
+     * Opens the selected WhatsApp chat with the message prefilled.
+     * MJ deliberately never presses Send; the user reviews and sends it manually.
+     */
+    fun whatsapp(to: String, text: String, lang: Lang): Res {
         val c = ctx()
-        val hit = Contacts.find(c, to) ?: return Res(false, S.contactNotFound(lang, to), true)
-        val pkg = listOf("com.whatsapp", "com.whatsapp.w4b").firstOrNull { Apps.hasPkg(it) }
-            ?: return Res(false, S.appNotFound(lang, "WhatsApp"), true)
-        val num = Contacts.normalizeForWhatsApp(hit.second)
-        val uri = Uri.parse("https://wa.me/$num?text=" + Uri.encode(text))
-        val i = Intent(Intent.ACTION_VIEW, uri).setPackage(pkg)
-        if (!launch(i)) return Res(false, S.failed(lang), true)
-        val svc = MJAccessibilityService.instance ?: return Res(true, S.waOpened(lang, hit.first), true)
-        for (n in 1..12) {
-            delay(800)
-            val didSend = withContext(Dispatchers.Main.immediate) { svc.clickSend() }
-            if (didSend) {
-                delay(600)
-                return Res(true, S.waSent(lang, hit.first), true)
-            }
+        val recipient = to.trim()
+        if (recipient.isBlank()) return Res(false, S.contactNotFound(lang, to), true)
+        if (!Contacts.isNumber(recipient) && !Contacts.hasReadPermission(c)) {
+            return Res(false, S.contactsPermission(lang), true)
         }
+
+        val hit = Contacts.find(c, recipient)
+            ?: return Res(false, S.contactNotFound(lang, recipient), true)
+        if (text.isBlank()) return Res(false, S.failed(lang), true)
+
+        val pkg = listOf("com.whatsapp", "com.whatsapp.w4b")
+            .firstOrNull { Apps.hasPkg(it) }
+            ?: return Res(false, S.appNotFound(lang, "WhatsApp"), true)
+
+        val number = Contacts.normalizeForWhatsApp(hit.second)
+        val uri = Uri.parse("https://wa.me/$number?text=" + Uri.encode(text))
+        val intent = Intent(Intent.ACTION_VIEW, uri).setPackage(pkg)
+        if (!launch(intent)) return Res(false, S.failed(lang), true)
+
         return Res(true, S.waOpened(lang, hit.first), true)
     }
 

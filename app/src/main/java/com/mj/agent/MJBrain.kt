@@ -166,59 +166,160 @@ object MJBrain {
         scope.launch {
             importProgress = 0
             modelError = ""
+
             val tmp = File(app.filesDir, "model.task.tmp")
+            val target = engine.modelFile()
+            val backup = File(app.filesDir, "model.task.backup")
+            var previousModelMoved = false
+            var replacementInstalled = false
+
             try {
                 withContext(Dispatchers.IO) {
-                    val cr = app.contentResolver
+                    tmp.delete()
+
+                    // Recover a backup left by an interrupted earlier import.
+                    if (!target.exists() && backup.exists()) {
+                        java.nio.file.Files.move(
+                            backup.toPath(), target.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                        )
+                    } else {
+                        backup.delete()
+                    }
+
                     var size = -1L
-                    cr.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+                    app.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
                         if (c.moveToFirst()) size = c.getLong(0)
                     }
-                    val input = cr.openInputStream(uri) ?: throw IllegalStateException("Cannot open file")
+                    val input = app.contentResolver.openInputStream(uri)
+                        ?: throw IllegalStateException("Cannot open selected model file")
+
                     input.use { inp ->
                         tmp.outputStream().use { out ->
-                            val buf = ByteArray(1 shl 20)
+                            val buffer = ByteArray(1 shl 20)
                             var total = 0L
-                            var last = -1
+                            var lastPercent = -1
                             while (true) {
-                                val n = inp.read(buf)
-                                if (n < 0) break
-                                if (n == 0) continue
-                                out.write(buf, 0, n)
-                                total += n
+                                val count = inp.read(buffer)
+                                if (count < 0) break
+                                if (count == 0) continue
+                                out.write(buffer, 0, count)
+                                total += count
+
                                 if (size > 0) {
-                                    val pct = (total * 100 / size).toInt()
-                                    if (pct != last) {
-                                        last = pct
-                                        withContext(Dispatchers.Main.immediate) { importProgress = pct.coerceIn(0, 99) }
+                                    val percent = (total * 100 / size).toInt().coerceIn(0, 99)
+                                    if (percent != lastPercent) {
+                                        lastPercent = percent
+                                        withContext(Dispatchers.Main.immediate) {
+                                            importProgress = percent
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
                     if (!tmp.exists() || tmp.length() < 50_000_000L) {
-                        throw IllegalArgumentException("This file is too small to be a supported .task model.")
+                        throw IllegalArgumentException(
+                            "This file is too small to be a supported MediaPipe .task model."
+                        )
                     }
                 }
-                // Keep the current model intact until the replacement file is fully copied
-                // and passes the minimum-size check. Close native resources off the UI thread.
+
+                // Keep the current working model until the candidate file has been copied.
                 withContext(Dispatchers.Default) { engine.unload() }
                 modelReady = false
+
                 withContext(Dispatchers.IO) {
-                    val dst = File(app.filesDir, "model.task")
+                    if (target.exists()) {
+                        java.nio.file.Files.move(
+                            target.toPath(), backup.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                        )
+                        previousModelMoved = true
+                    }
                     java.nio.file.Files.move(
-                        tmp.toPath(), dst.toPath(),
+                        tmp.toPath(), target.toPath(),
                         java.nio.file.StandardCopyOption.REPLACE_EXISTING
                     )
+                    replacementInstalled = true
                 }
+
                 modelPresent = engine.hasModel()
                 loadModelSuspend()
-            } catch (e: Throwable) {
+                if (!modelReady) {
+                    throw IllegalArgumentException(
+                        modelError.ifBlank { "The selected model could not be loaded." }
+                    )
+                }
+
+                withContext(Dispatchers.IO) { backup.delete() }
+                modelError = ""
+            } catch (e: CancellationException) {
+                // Restore the previous file even when the import coroutine is cancelled.
+                withContext(NonCancellable + Dispatchers.Default) { engine.unload() }
+                withContext(NonCancellable + Dispatchers.IO) {
+                    if (replacementInstalled) target.delete()
+                    if (previousModelMoved && backup.exists()) {
+                        runCatching {
+                            java.nio.file.Files.move(
+                                backup.toPath(), target.toPath(),
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                            )
+                        }
+                    }
+                    tmp.delete()
+                }
+                modelReady = false
                 modelPresent = engine.hasModel()
-                modelError = e.message ?: "import failed"
+                modelError = if (modelPresent) {
+                    "Model import was cancelled. The previous model file was restored."
+                } else {
+                    "Model import was cancelled."
+                }
+                throw e
+            } catch (e: Throwable) {
+                val importFailure = e.message ?: e.javaClass.simpleName
+                withContext(NonCancellable + Dispatchers.Default) { engine.unload() }
+
+                val restoreFailure = withContext(NonCancellable + Dispatchers.IO) {
+                    if (replacementInstalled) target.delete()
+                    var failure: String? = null
+                    if (previousModelMoved && backup.exists()) {
+                        try {
+                            java.nio.file.Files.move(
+                                backup.toPath(), target.toPath(),
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                            )
+                        } catch (restoreError: Throwable) {
+                            failure = restoreError.message ?: "could not restore the previous model"
+                        }
+                    }
+                    tmp.delete()
+                    failure
+                }
+
+                modelReady = false
+                modelPresent = engine.hasModel()
+                if (modelPresent && restoreFailure == null) {
+                    loadModelSuspend()
+                    modelError = if (modelReady) {
+                        "Import failed: $importFailure. The previous model was restored."
+                    } else {
+                        "Import failed: $importFailure. Previous model reload failed: $modelError"
+                    }
+                } else {
+                    modelError = buildString {
+                        append("Model import failed: ").append(importFailure)
+                        if (!restoreFailure.isNullOrBlank()) {
+                            append(". Previous model restore failed: ").append(restoreFailure)
+                        }
+                    }
+                }
             } finally {
                 withContext(NonCancellable + Dispatchers.IO) { tmp.delete() }
                 importProgress = -1
+                modelPresent = engine.hasModel()
             }
         }
     }
