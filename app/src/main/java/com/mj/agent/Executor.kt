@@ -26,7 +26,7 @@ object Executor {
             "screenshot" -> {
                 if (svc == null) return noA11y
                 val ok = withContext(Dispatchers.Main.immediate) { svc.takeScreenshot() }
-                Res(ok, if (ok) S.screenshotStarted(lang) else S.failed(lang), true)
+                Res(ok, if (ok) "Android screenshot started (not saved by MJ)." else S.failed(lang), true)
             }
             "volume" -> Device.volume(act.str("mode"), lang)
             "media_control", "media" -> Device.mediaControl(act.str("action"), lang)
