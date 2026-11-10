@@ -146,6 +146,29 @@ class MJAccessibilityService : AccessibilityService() {
         return false
     }
 
+    /** Starts Android's secure system screenshot flow; callback is asynchronous. */
+    fun takeScreenshot(): Boolean {
+        if (Build.VERSION.SDK_INT <  screenshotApi()) return false
+        return try {
+            takeScreenshot(
+                AccessibilityService.SCREENSHOT_TYPE_FULLSCREEN,
+                mainExecutor,
+                object : AccessibilityService.TakeScreenshotCallback {
+                    override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
+                        // Screenshot result is intentionally not persisted or uploaded by MJ.
+                        result.hardwareBuffer.close()
+                    }
+                    override fun onFailure(errorCode: Int) {}
+                }
+            )
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun screenshotApi(): Int = 30
+
     fun back(): Boolean = performGlobalAction(GLOBAL_ACTION_BACK)
     fun home(): Boolean = performGlobalAction(GLOBAL_ACTION_HOME)
 
