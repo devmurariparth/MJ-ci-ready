@@ -9,17 +9,18 @@ object Router {
         "open ", "launch ", "call ", "dial ", "phone ", "make a call", "send ", "whatsapp",
         "alarm", "timer", "flashlight", "torch", "turn on", "turn off", "switch on", "switch off",
         "play ", "listen to ", "song", "music", "search ", "google ", "scroll", "click ", "tap ",
+        "volume", "mute", "unmute", "next song", "previous song", "pause music", "resume music", "simpmusic",
         "type ", "go back", "go home", "wifi", "bluetooth", "remind", "set a ", "set an ",
         // Roman Gujarati / Hindi
         "kholo", "khol ", "khol do", "mokal", "moklo", "bhejo", "bhej do", "chalu", "bandh kar",
         "band kar", "call kar", "phone kar", "phone karo", "alarm laga", "laga do", "lagao",
-        "shodh", "khojo", "chalao", "vagado", "vagadu", "spotify", "youtube",
+        "shodh", "khojo", "chalao", "vagado", "vagadu", "spotify", "youtube", "simpmusic", "awaj", "avaj", "ochho",
         // Gujarati
         "ખોલ", "મોકલ", "ફોન કર", "કોલ", "અલાર્મ", "ટાઈમર", "ટાઇમર", "ટોર્ચ", "ચાલુ",
-        "બંધ કર", "શોધ", "સર્ચ", "વગાડ", "ગીત", "સોંગ", "સ્પોટિફાય", "યુટ્યુબ", "સેટ કર",
+        "બંધ કર", "શોધ", "સર્ચ", "વગાડ", "ગીત", "સોંગ", "સ્પોટિફાય", "યુટ્યુબ", "સિમ્પ મ્યુઝિક", "વોલ્યુમ", "આવાજ", "ઓછો", "આગળનું ગીત", "પાછળનું ગીત", "સેટ કર",
         // Hindi
         "खोल", "भेज", "फोन कर", "कॉल", "अलार्म", "टाइमर", "टॉर्च", "चालू", "बंद कर",
-        "खोज", "सर्च", "चला", "बजा", "गाना", "गीत", "स्पॉटिफाई", "यूट्यूब", "सेट कर"
+        "खोज", "सर्च", "चला", "बजा", "गाना", "गीत", "स्पॉटिफाई", "यूट्यूब", "सिम्प म्यूजिक", "आवाज़", "कम", "अगला गाना", "पिछला गाना", "सेट कर"
     )
 
     fun looksLikeTask(text: String): Boolean {
@@ -61,6 +62,7 @@ object Router {
         if (!hasPlayIntent) return null
 
         val provider = when {
+            t.contains("simpmusic") || t.contains("simp music") || t.contains("સિમ્પ મ્યુઝિક") || t.contains("सिम्प म्यूजिक") -> "simpmusic"
             t.contains("spotify") || t.contains("સ્પોટિફાય") || t.contains("स्पॉटिफाई") -> "spotify"
             t.contains("youtube music") -> "youtube music"
             t.contains("youtube") || t.contains("યુટ્યુબ") || t.contains("यूट्यूब") -> "youtube"
@@ -77,8 +79,8 @@ object Router {
             break
         }
         query = query.replace(Regex("^(?:spotify|youtube(?: music)?|સ્પોટિફાય|યુટ્યુબ|स्पॉटिफाई|यूट्यूब)(?:\\s+(?:ma|par|pe|માં|પર|में|पर))?\\s+"), "")
-        query = query.replace(Regex("\\s+(?:on|in)\\s+(?:spotify|youtube(?: music)?)$"), "")
-        query = query.replace(Regex("\\s+(?:spotify|youtube(?: music)?)(?:\\s+(?:ma|par|pe|માં|પર|में|पर))?$"), "")
+        query = query.replace(Regex("\\s+(?:on|in)\\s+(?:spotify|simpmusic|simp music|youtube(?: music)?)$"), "")
+        query = query.replace(Regex("\\s+(?:spotify|simpmusic|simp music|youtube(?: music)?)(?:\\s+(?:ma|par|pe|માં|પર|में|पर))?$"), "")
         query = query.replace(
             Regex("\\s+(?:please|song|songs|ગીત|ગીતો|સોંગ|ગાના|गाना|गाने|ગીતને|વગાડો?|વગાડ|ચલાવો?|બજાવો|chalao|chala|vagado|vagadu|bajao)$"),
             ""
