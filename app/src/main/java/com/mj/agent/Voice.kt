@@ -12,6 +12,7 @@ import android.speech.SpeechRecognizer
 /** Speech-to-text (Android built-in recognizer, free, API key vagar). Main thread par j vapro. */
 object Voice {
     private var rec: SpeechRecognizer? = null
+    private var sessionId = 0
 
     fun available(ctx: Context): Boolean = SpeechRecognizer.isRecognitionAvailable(ctx)
 
@@ -23,10 +24,13 @@ object Voice {
         onFail: (Int) -> Unit
     ) {
         stop()
+        val currentSession = ++sessionId
+        var delivered = false
+        fun failOnce(code: Int) { if (currentSession != sessionId || delivered) return; delivered = true; onFail(code) }
         val r = try {
             SpeechRecognizer.createSpeechRecognizer(ctx.applicationContext)
         } catch (_: RuntimeException) {
-            onFail(SpeechRecognizer.ERROR_CLIENT)
+            failOnce(SpeechRecognizer.ERROR_CLIENT)
             return
         }
         rec = r
@@ -40,18 +44,20 @@ object Voice {
 
             override fun onPartialResults(partialResults: Bundle?) {
                 val t = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                if (!t.isNullOrBlank()) onPartial(t)
+                if (currentSession == sessionId && !delivered && !t.isNullOrBlank()) onPartial(t)
             }
 
             override fun onResults(results: Bundle?) {
                 val t = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                Handler(Looper.getMainLooper()).post { stop() }
+                if (currentSession != sessionId || delivered) return
+                delivered = true
+                Handler(Looper.getMainLooper()).post { if (currentSession == sessionId) stop() }
                 if (t.isNullOrBlank()) onFail(SpeechRecognizer.ERROR_NO_MATCH) else onResult(t)
             }
 
             override fun onError(error: Int) {
-                Handler(Looper.getMainLooper()).post { stop() }
-                onFail(error)
+                failOnce(error)
+                Handler(Looper.getMainLooper()).post { if (currentSession == sessionId) stop() }
             }
         })
         val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -59,16 +65,19 @@ object Voice {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang.tag)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L)
         }
         try {
             r.startListening(i)
         } catch (_: RuntimeException) {
+            failOnce(SpeechRecognizer.ERROR_CLIENT)
             stop()
-            onFail(SpeechRecognizer.ERROR_CLIENT)
         }
     }
 
     fun stop() {
+        sessionId++
         try { rec?.destroy() } catch (_: Throwable) {}
         rec = null
     }
