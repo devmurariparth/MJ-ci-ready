@@ -5,12 +5,15 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.provider.AlarmClock
 import android.provider.MediaStore
 import android.provider.Settings
+import android.os.SystemClock
+import android.view.KeyEvent
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
@@ -91,6 +94,29 @@ object Device {
                     tryOpen(spotifyUrl, "com.spotify.music") ||
                     tryOpen(spotifyUrl)
             }
+            requested.contains("simpmusic") || requested.contains("simp music") -> {
+                val packageName = "com.maxrave.simpmusic"
+                if (!Apps.hasPkg(packageName)) {
+                    false
+                } else {
+                    val searchIntent = Intent(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH).apply {
+                        setPackage(packageName)
+                        putExtra(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/*")
+                        putExtra(SearchManager.QUERY, q)
+                    }
+                    if (searchIntent.resolveActivity(c.packageManager) != null) {
+                        launch(searchIntent)
+                    } else {
+                        // The app does not expose the standard media-search action on every build.
+                        // Open the app without claiming that playback started.
+                        val mainIntent = c.packageManager.getLaunchIntentForPackage(packageName)
+                        if (mainIntent != null) {
+                            mainIntent.putExtra(SearchManager.QUERY, q)
+                            launch(mainIntent)
+                        } else false
+                    }
+                }
+            }
             requested.contains("youtube music") || requested.contains("yt music") -> {
                 tryMusicPlayback("com.google.android.apps.youtube.music") ||
                     tryOpen(youtubeMusicUrl, "com.google.android.apps.youtube.music") ||
@@ -112,8 +138,76 @@ object Device {
             else -> tryOpen(youtubeUrl)
         }
 
-        return if (opened) Res(true, S.musicSearchOpened(lang, q), true)
-        else Res(false, S.musicAppUnavailable(lang), true)
+        return if (opened) {
+            val response = if (requested.contains("simpmusic") || requested.contains("simp music")) {
+                S.simpMusicOpened(lang, q)
+            } else {
+                S.musicSearchOpened(lang, q)
+            }
+            Res(true, response, true)
+        } else Res(false, S.musicAppUnavailable(lang), true)
+    }
+
+    /** Controls only the media stream, not ringtone or alarm volume. */
+    fun volume(modeRaw: String, lang: Lang): Res {
+        val audio = ctx().getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            ?: return Res(false, S.volumeFailed(lang), true)
+        if (audio.isVolumeFixed) return Res(false, S.volumeFixed(lang), true)
+        val mode = modeRaw.trim().lowercase()
+        return try {
+            val maximum = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            val current = audio.getStreamVolume(AudioManager.STREAM_MUSIC)
+            when {
+                mode == "max" -> audio.setStreamVolume(AudioManager.STREAM_MUSIC, maximum, AudioManager.FLAG_SHOW_UI)
+                mode == "mute" -> audio.setStreamVolume(AudioManager.STREAM_MUSIC, 0, AudioManager.FLAG_SHOW_UI)
+                mode == "unmute" -> {
+                    if (current == 0) audio.setStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        (maximum / 2).coerceAtLeast(1),
+                        AudioManager.FLAG_SHOW_UI
+                    )
+                }
+                mode == "down" -> audio.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI
+                )
+                mode.startsWith("set:") -> {
+                    val percent = mode.substringAfter("set:").toIntOrNull()
+                        ?: return Res(false, S.volumeFailed(lang), true)
+                    val level = (maximum * percent.coerceIn(0, 100) / 100f).toInt()
+                    audio.setStreamVolume(AudioManager.STREAM_MUSIC, level, AudioManager.FLAG_SHOW_UI)
+                }
+                else -> audio.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI
+                )
+            }
+            Res(true, S.volumeChanged(lang, mode), true)
+        } catch (_: SecurityException) {
+            Res(false, S.volumeFailed(lang), true)
+        } catch (_: Exception) {
+            Res(false, S.volumeFailed(lang), true)
+        }
+    }
+
+    /** Sends play/pause/next/previous keys to the phone's active media-key consumer. */
+    fun mediaControl(actionRaw: String, lang: Lang): Res {
+        val audio = ctx().getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            ?: return Res(false, S.mediaControlFailed(lang), true)
+        val action = actionRaw.trim().lowercase()
+        val keyCode = when (action) {
+            "next" -> KeyEvent.KEYCODE_MEDIA_NEXT
+            "previous" -> KeyEvent.KEYCODE_MEDIA_PREVIOUS
+            "pause" -> KeyEvent.KEYCODE_MEDIA_PAUSE
+            "resume", "play" -> KeyEvent.KEYCODE_MEDIA_PLAY
+            else -> return Res(false, S.mediaControlFailed(lang), true)
+        }
+        return try {
+            val now = SystemClock.uptimeMillis()
+            audio.dispatchMediaKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0))
+            audio.dispatchMediaKeyEvent(KeyEvent(now, now + 1, KeyEvent.ACTION_UP, keyCode, 0))
+            Res(true, S.mediaControlSent(lang, action), true)
+        } catch (_: Exception) {
+            Res(false, S.mediaControlFailed(lang), true)
+        }
     }
 
     suspend fun whatsapp(to: String, text: String, lang: Lang): Res {
