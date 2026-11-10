@@ -73,14 +73,14 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: MJ-v3.0.0-debug-APK
-          path: MJ-v0.6.1.apk
+          path: MJ-v3.0.0.apk
           if-no-files-found: error
           retention-days: 30
 
       - name: Publish GitHub Release with expanded MJ APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.6.1
+          tag_name: v3.0.0
           name: MJ v3.0 Liquid
           body: |
             MJ Android test release (versionName 3.0-iOS-Liquid, versionCode 8).
@@ -94,7 +94,7 @@ jobs:
             Important limitations: selecting MJ as the default digital assistant is a separate user-controlled Android setting. This is not an always-listening "Hey MJ" hotword. Music providers may open a search/result view rather than guarantee automatic playback. SimpMusic opens a search or launch intent and does not guarantee autoplay. Media-key commands are sent to Android's active media-key consumer and depend on a compatible player being active. Flashlight access requires camera permission when first used. Phone calling requires the appropriate user-granted Contacts/Phone permissions.
 
             This is a debug-signed testing APK, not a production Play Store release.
-          files: MJ-v0.6.1.apk
+          files: MJ-v3.0.0.apk
           fail_on_unmatched_files: true
           overwrite_files: true
           make_latest: true
