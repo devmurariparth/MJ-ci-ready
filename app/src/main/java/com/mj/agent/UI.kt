@@ -388,6 +388,7 @@ private fun WelcomeCard(lang: Lang, onQuick: (String) -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SuggestionChip("♫  Play music") { onQuick("Play music") }
+            SuggestionChip("♫  SimpMusic") { onQuick("Play music on SimpMusic") }
             SuggestionChip("▶  Open YouTube") { onQuick("Open YouTube") }
             SuggestionChip("✦  Chat with MJ") { onQuick("Hello MJ") }
         }

@@ -39,6 +39,10 @@ Android Studio may offer to install missing Android SDK components (the project 
 - `WhatsApp par Rahul ne hu aavu chu moklo`
 - `સવારે 6:45 નો અલાર્મ મૂક` / `5 मिनट का टाइमर लगाओ`
 - `ટોર્ચ ચાલુ કર` / `torch off`
+- `Play Believer on SimpMusic` / `SimpMusic ખોલ`
+- `volume 60%` / `Awaj ochho kar` / `આવાજ વધારો`
+- `next song` / `pause music` / `resume music`
+- `set alarm for 6:45 AM` / `5 minutes timer`
 - `cricket score google par shodho`
 
 ## Notes and limitations
@@ -46,4 +50,5 @@ Android Studio may offer to install missing Android SDK components (the project 
 - Voice activation is tap-to-talk; a background always-listening “Hey MJ” hotword service is not included in this project.
 - Gujarati/Hindi speech recognition and text-to-speech availability depends on language packs and the Android speech/TTS service installed on the phone.
 - WhatsApp opens the matched chat and attempts to press Send through Accessibility. When the Send button cannot be identified, MJ leaves the message ready for the user to send manually. Ambiguous contact matches are not guessed.
-- A compatible on-device model is required for free-form chat and multi-step agent reasoning. Simple app-opening and flashlight fast-path commands can work without the model.
+- A compatible on-device model is required for free-form chat and multi-step agent reasoning. App opening, calling, alarm, timer, flashlight, music search, volume and media-key fast-path commands can work without the model.
+- SimpMusic is handled through the standard Android media-search intent when supported; otherwise MJ opens SimpMusic. This does not guarantee that a track starts automatically.

@@ -307,7 +307,7 @@ object MJBrain {
             publishStatus(S.step(lang, step))
             val svc = MJAccessibilityService.instance
             val screen = if (svc != null) withContext(Dispatchers.Main.immediate) { svc.snapshot(screenLimit) }
-            else "(screen reading is OFF; use only call, whatsapp, alarm, timer, web, flashlight, settings, open_app, done)"
+            else "(screen reading is OFF; use call, whatsapp, alarm, timer, web, flashlight, volume, media_control, play_music, settings, open_app, done)"
             val raw = engine.generate(AgentPrompt.build(goal, lang, hist, screen, compact), 0.2f)
             val act = AgentPrompt.parse(raw)
             if (act == null) {

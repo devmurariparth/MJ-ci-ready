@@ -1,4 +1,4 @@
-name: Build MJ 3.0 Liquid and Publish APK
+name: Build MJ-ci-ready 3.0.1 and Publish APK
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: mj-expanded-release-v3.0.0
+  group: mj-ci-ready-3-0-1
   cancel-in-progress: false
 
 jobs:
@@ -17,22 +17,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
-      - name: Checkout release repository
+      - name: Checkout MJ-ci-ready source
         uses: actions/checkout@v7
 
-      - name: Checkout expanded MJ source
-        uses: actions/checkout@v7
-        with:
-          repository: devmurariparth/pikachu
-          ref: main # use the latest integrated MJ 3.0 source
-          path: mj-source
-          persist-credentials: false
+      - name: Verify this repository contains the Android app
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f app/build.gradle.kts
+          test -f app/src/main/java/com/mj/agent/MainActivity.kt
+          grep -q 'applicationId = "com.mj.agent"' app/build.gradle.kts
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
@@ -43,58 +43,52 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;36.0.0"
 
-      - name: Make Gradle wrapper executable
-        working-directory: mj-source
-        shell: bash
-        run: |
-          sed -i 's/\r$//' gradlew
-          chmod +x gradlew
-
-      - name: Set up Gradle
+      - name: Set up Gradle 9.1.0
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-read-only: false
+          gradle-version: '9.1.0'
 
-      - name: Run unit tests, lint and build debug APK
-        working-directory: mj-source
-        run: ./gradlew testDebugUnitTest :app:lintDebug assembleDebug --stacktrace
+      - name: Run Android lint and build MJ debug APK
+        run: gradle :app:lintDebug :app:assembleDebug --stacktrace
 
       - name: Verify and name APK
         shell: bash
         run: |
           set -euo pipefail
-          test -s mj-source/app/build/outputs/apk/debug/app-debug.apk
-          cp mj-source/app/build/outputs/apk/debug/app-debug.apk MJ-v3.0.0.apk
-          ls -lh MJ-v3.0.0.apk
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk MJ-v3.0.1.apk
+          ls -lh MJ-v3.0.1.apk
+          sha256sum MJ-v3.0.1.apk
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v7
         with:
-          name: MJ-v3.0.0-debug-APK
-          path: MJ-v3.0.0.apk
+          name: MJ-v3.0.1-debug-APK
+          path: MJ-v3.0.1.apk
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub Release with expanded MJ APK
+      - name: Publish GitHub Release with MJ-ci-ready APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.0.0
-          name: MJ v3.0 Liquid
+          tag_name: v3.0.1
+          name: MJ 3.0.1 (MJ-ci-ready source)
           body: |
-            MJ Android test release (versionName 3.0-iOS-Liquid, versionCode 8).
+            MJ Android test release.
 
-            Built from the expanded source repository: devmurariparth/pikachu.
+            Built directly from devmurariparth/MJ-ci-ready, not from another repository.
+            Package ID: com.mj.agent
+            versionName: 3.0.1
+            versionCode: 6
 
-            This release installs side-by-side with the previous MJ app as com.mj.aiagent. Keep the previous MJ app and its private app data; this test app uses separate storage.
+            Included: Gujarati/Hindi/English tap-to-talk assistant; local app launch, contact lookup and dialer, WhatsApp, alarms with minutes, timers with hours/minutes/seconds, flashlight, Spotify, YouTube, YouTube Music and SimpMusic routing; media volume up/down/set/mute/unmute; next/previous/pause/resume media-key commands; MediaPipe on-device chat/agent; floating accessibility orb; and the existing glass-style Compose interface.
 
-            Included source capabilities: premium animated assistant orb and chat UI; Gujarati, Hindi and English normalization; local command routing; typed action/tool contracts; permission and policy gate; contact disambiguation and call flow; Spotify, YouTube, YouTube Music and SimpMusic provider handling; media volume commands; active-player next/previous/pause/resume controls; flashlight control with runtime permission; alarm times with minutes; WhatsApp and SMS intents; task/reminder features; memory controls; vision consent flow; and Android system voice-interaction entry point.
+            SimpMusic uses the standard Android media-search intent when supported; otherwise MJ opens the SimpMusic app. Automatic playback is not guaranteed. Media-key commands are sent to Android's active media-key consumer.
 
-            Important limitations: selecting MJ as the default digital assistant is a separate user-controlled Android setting. This is not an always-listening "Hey MJ" hotword. Music providers may open a search/result view rather than guarantee automatic playback. SimpMusic opens a search or launch intent and does not guarantee autoplay. Media-key commands are sent to Android's active media-key consumer and depend on a compatible player being active. Flashlight access requires camera permission when first used. Phone calling requires the appropriate user-granted Contacts/Phone permissions.
-
-            This is a debug-signed testing APK, not a production Play Store release.
-          files: MJ-v3.0.0.apk
+            This is a debug-signed test APK, not a production Play Store release. Android only permits an in-place update when the signing certificate matches the installed app. If the installed v0.5.0 build has a different debug certificate, Android may require removing that old build before installing this one; its private app data (including an imported model) may then need to be restored or imported again.
+          files: MJ-v3.0.1.apk
           fail_on_unmatched_files: true
           overwrite_files: true
           make_latest: true
