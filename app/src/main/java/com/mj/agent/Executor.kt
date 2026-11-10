@@ -22,6 +22,8 @@ object Executor {
             "web", "search" -> Device.web(act.str("q").ifBlank { act.str("query") }, lang)
             "settings" -> Device.openSettings(act.str("page"), lang)
             "flashlight", "torch" -> Device.flashlight(act.bool("on", true), lang)
+            "volume" -> Device.volume(act.str("mode"), lang)
+            "media_control", "media" -> Device.mediaControl(act.str("action"), lang)
             "click", "tap" -> {
                 if (svc == null) return noA11y
                 val ok = withContext(Dispatchers.Main.immediate) {
