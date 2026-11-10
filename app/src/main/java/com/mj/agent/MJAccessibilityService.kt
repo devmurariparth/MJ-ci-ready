@@ -148,7 +148,7 @@ class MJAccessibilityService : AccessibilityService() {
 
     /** Starts Android's secure system screenshot flow; callback is asynchronous. */
     fun takeScreenshot(): Boolean {
-        if (Build.VERSION.SDK_INT <  screenshotApi()) return false
+        if (Build.VERSION.SDK_INT < 30) return false
         return try {
             takeScreenshot(
                 AccessibilityService.SCREENSHOT_TYPE_FULLSCREEN,
@@ -166,8 +166,6 @@ class MJAccessibilityService : AccessibilityService() {
             false
         }
     }
-
-    private fun screenshotApi(): Int = 30
 
     fun back(): Boolean = performGlobalAction(GLOBAL_ACTION_BACK)
     fun home(): Boolean = performGlobalAction(GLOBAL_ACTION_HOME)
