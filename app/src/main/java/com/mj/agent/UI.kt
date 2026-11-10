@@ -185,7 +185,7 @@ private fun Header(lang: Lang) {
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (MJBrain.messages.isNotEmpty()) {
-                TextButton(onClick = { MJBrain.messages.clear() }, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                TextButton(onClick = { MJBrain.clearChat() }, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
                     Text("Clear", color = TextMuted, fontSize = 12.sp)
                 }
             }
