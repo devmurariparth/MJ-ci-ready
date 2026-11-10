@@ -8,18 +8,18 @@ object Router {
         // English
         "open ", "launch ", "call ", "dial ", "phone ", "make a call", "send ", "whatsapp",
         "alarm", "timer", "flashlight", "torch", "turn on", "turn off", "switch on", "switch off",
-        "play ", "listen to ", "song", "music", "search ", "google ", "scroll", "click ", "tap ",
+        "play ", "listen to ", "song", "music", "search ", "google ", "scroll", "click ", "tap ", "brightness", "screen brightness", "rotate screen", "rotation",
         "volume", "mute", "unmute", "next song", "previous song", "pause music", "resume music", "simpmusic",
-        "type ", "go back", "go home", "wifi", "bluetooth", "remind", "set a ", "set an ",
+        "type ", "go back", "go home", "wifi", "bluetooth", "remind", "set a ", "set an ", "screenshot", "take screenshot",
         // Roman Gujarati / Hindi
         "kholo", "khol ", "khol do", "mokal", "moklo", "bhejo", "bhej do", "chalu", "bandh kar",
         "band kar", "call kar", "phone kar", "phone karo", "alarm laga", "laga do", "lagao",
-        "shodh", "khojo", "chalao", "vagado", "vagadu", "spotify", "youtube", "simpmusic", "awaj", "avaj", "ochho",
+        "shodh", "khojo", "chalao", "vagado", "vagadu", "spotify", "youtube", "simpmusic", "awaj", "avaj", "ochho", "screen brightness", "brightness", "screenshot", "photo kholo",
         // Gujarati
         "ખોલ", "મોકલ", "ફોન કર", "કોલ", "અલાર્મ", "ટાઈમર", "ટાઇમર", "ટોર્ચ", "ચાલુ",
-        "બંધ કર", "શોધ", "સર્ચ", "વગાડ", "ગીત", "સોંગ", "સ્પોટિફાય", "યુટ્યુબ", "સિમ્પ મ્યુઝિક", "વોલ્યુમ", "આવાજ", "ઓછો", "આગળનું ગીત", "પાછળનું ગીત", "સેટ કર",
+        "બંધ કર", "શોધ", "સર્ચ", "વગાડ", "બ્રાઇટનેસ", "સ્ક્રીનશોટ", "સ્ક્રીન શોટ", "ગીત", "સોંગ", "સ્પોટિફાય", "યુટ્યુબ", "સિમ્પ મ્યુઝિક", "વોલ્યુમ", "આવાજ", "ઓછો", "આગળનું ગીત", "પાછળનું ગીત", "સેટ કર",
         // Hindi
-        "खोल", "भेज", "फोन कर", "कॉल", "अलार्म", "टाइमर", "टॉर्च", "चालू", "बंद कर",
+        "खोल", "भेज", "फोन कर", "कॉल", "अलार्म", "टाइमर", "टॉर्च", "चालू", "बंद कर", "ब्राइटनेस", "स्क्रीनशॉट",
         "खोज", "सर्च", "चला", "बजा", "गाना", "गीत", "स्पॉटिफाई", "यूट्यूब", "सिम्प म्यूजिक", "आवाज़", "कम", "अगला गाना", "पिछला गाना", "सेट कर"
     )
 
