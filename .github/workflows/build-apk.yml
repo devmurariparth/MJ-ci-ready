@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: devmurariparth/pikachu
-          ref: main
+          ref: main # use the latest integrated MJ 3.0 source
           path: mj-source
           persist-credentials: false
 
