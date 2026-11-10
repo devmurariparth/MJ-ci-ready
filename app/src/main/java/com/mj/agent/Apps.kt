@@ -40,6 +40,7 @@ object Apps {
         Triple("clock", listOf("clock", "ઘડિયાળ", "घड़ी"), listOf("com.google.android.deskclock", "com.android.deskclock")),
         Triple("telegram", listOf("telegram", "ટેલિગ્રામ", "टेलीग्राम"), listOf("org.telegram.messenger")),
         Triple("spotify", listOf("spotify", "સ્પોટિફાય", "स्पॉटिफाई"), listOf("com.spotify.music")),
+        Triple("simpmusic", listOf("simpmusic", "simp music", "સિમ્પ મ્યુઝિક", "सिम्प म्यूजिक"), listOf("com.maxrave.simpmusic")),
         Triple("phonepe", listOf("phonepe", "phone pe", "ફોનપે", "फोनपे"), listOf("com.phonepe.app")),
         Triple("paytm", listOf("paytm", "પેટીએમ", "पेटीएम"), listOf("net.one97.paytm")),
         Triple("pay", listOf("gpay", "google pay", "ગૂગલ પે", "गूगल पे"), listOf("com.google.android.apps.nbu.paisa.user"))
