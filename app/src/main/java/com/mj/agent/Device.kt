@@ -145,6 +145,14 @@ object Device {
         } else Res(false, S.musicAppUnavailable(lang), true)
     }
 
+    /** Adjust screen brightness through the system brightness setting (no privileged API). */
+    fun brightness(modeRaw: String, lang: Lang): Res {
+        val mode = modeRaw.trim().lowercase()
+        val intent = Intent(Settings.ACTION_DISPLAY_SETTINGS)
+        return if (launch(intent)) Res(true, "Display settings opened. Adjust brightness there.", true)
+        else Res(false, S.failed(lang), true)
+    }
+
     /** Controls only the media stream, not ringtone or alarm volume. */
     fun volume(modeRaw: String, lang: Lang): Res {
         val audio = ctx().getSystemService(Context.AUDIO_SERVICE) as? AudioManager
