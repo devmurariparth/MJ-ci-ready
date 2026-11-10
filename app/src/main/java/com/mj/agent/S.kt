@@ -20,6 +20,29 @@ object S {
     fun dialerOpened(l: Lang, n: String, number: String) = tr(l, "Dialer opened for $n ($number). Review it and tap Call to place the call.", "$n ($number) માટે Dialer ખોલ્યું છે. નંબર ચકાસીને Call દબાવો.", "$n ($number) के लिए Dialer खुल गया है। नंबर जाँचें और कॉल करने के लिए Call दबाएँ।")
     fun musicSearchOpened(l: Lang, q: String) = tr(l, "Music search opened for \"$q\". Choose a track in the music app to start playback.", "\"$q\" માટે music search ખોલ્યું છે. ગીત પસંદ કરીને વગાડો.", "\"$q\" के लिए music search खुल गई है। गाना चुनकर चलाएँ।")
     fun musicAppUnavailable(l: Lang) = tr(l, "Could not open a music app or music search. Install Spotify or YouTube and try again.", "Music app અથવા music search ખોલી શકાઈ નહીં. Spotify અથવા YouTube install કરીને ફરી પ્રયાસ કરો.", "Music app या music search नहीं खुली। Spotify या YouTube install करके फिर कोशिश करें।")
+    fun simpMusicOpened(l: Lang, q: String) = tr(
+        l,
+        "Opened SimpMusic for \"$q\". Choose the track there if search did not open automatically.",
+        "\"$q\" માટે SimpMusic ખોલ્યું છે. Search આપમેળે ન ખુલે તો ત્યાં ગીત શોધો.",
+        "\"$q\" के लिए SimpMusic खोला है। Search अपने-आप न खुले तो वहाँ गाना खोजें।"
+    )
+    fun volumeChanged(l: Lang, mode: String) = when (mode) {
+        "down" -> tr(l, "Media volume decreased.", "મીડિયાનું વોલ્યુમ ઓછું કર્યું.", "मीडिया वॉल्यूम कम किया।")
+        "max" -> tr(l, "Media volume set to maximum.", "મીડિયાનું વોલ્યુમ મહત્તમ કર્યું.", "मीडिया वॉल्यूम अधिकतम किया।")
+        "mute" -> tr(l, "Media volume muted.", "મીડિયાનું વોલ્યુમ મ્યૂટ કર્યું.", "मीडिया वॉल्यूम म्यूट किया।")
+        "unmute" -> tr(l, "Media volume unmuted.", "મીડિયાનું વોલ્યુમ ચાલુ કર્યું.", "मीडिया वॉल्यूम अनम्यूट किया।")
+        else -> tr(l, "Media volume increased.", "મીડિયાનું વોલ્યુમ વધાર્યું.", "मीडिया वॉल्यूम बढ़ाया।")
+    }
+    fun volumeFailed(l: Lang) = tr(l, "Could not change media volume.", "મીડિયાનું વોલ્યુમ બદલી શકાયું નહીં.", "मीडिया वॉल्यूम नहीं बदल सका।")
+    fun volumeFixed(l: Lang) = tr(l, "This device does not allow app-based volume changes.", "આ ફોનમાં એપ દ્વારા વોલ્યુમ બદલી શકાતું નથી.", "इस डिवाइस में ऐप से वॉल्यूम नहीं बदला जा सकता।")
+    fun mediaControlSent(l: Lang, action: String) = when (action) {
+        "next" -> tr(l, "Sent next-track command.", "આગળના ગીતનો કમાન્ડ મોકલ્યો.", "अगले गाने का कमांड भेजा।")
+        "previous" -> tr(l, "Sent previous-track command.", "પહેલાના ગીતનો કમાન્ડ મોકલ્યો.", "पिछले गाने का कमांड भेजा।")
+        "pause" -> tr(l, "Sent pause command.", "Pause કમાન્ડ મોકલ્યો.", "Pause कमांड भेजा।")
+        else -> tr(l, "Sent play command.", "Play કમાન્ડ મોકલ્યો.", "Play कमांड भेजा।")
+    }
+    fun mediaControlFailed(l: Lang) = tr(l, "Could not send the media control command.", "મીડિયા કંટ્રોલ કમાન્ડ મોકલી શકાયો નહીં.", "मीडिया कंट्रोल कमांड नहीं भेज सका।")
+
     fun contactNotFound(l: Lang, n: String) = tr(
         l, "Contact '$n' was not found or has multiple matches (check Contacts permission and use the full name)",
         "'$n' નામનો કોન્ટેક્ટ મળ્યો નહીં અથવા એકથી વધુ મેળ મળ્યા (કોન્ટેક્ટ્સ પરવાનગી તપાસો અને પૂરું નામ બોલો)",
