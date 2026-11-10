@@ -1,4 +1,4 @@
-name: Build Expanded MJ and Release v0.6.1
+name: Build MJ 3.0 Liquid and Publish APK
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: mj-expanded-release-v0.6.1
+  group: mj-expanded-release-v3.0.0
   cancel-in-progress: false
 
 jobs:
@@ -66,13 +66,13 @@ jobs:
         run: |
           set -euo pipefail
           test -s mj-source/app/build/outputs/apk/debug/app-debug.apk
-          cp mj-source/app/build/outputs/apk/debug/app-debug.apk MJ-v0.6.1.apk
-          ls -lh MJ-v0.6.1.apk
+          cp mj-source/app/build/outputs/apk/debug/app-debug.apk MJ-v3.0.0.apk
+          ls -lh MJ-v3.0.0.apk
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v7
         with:
-          name: MJ-v0.6.1-debug-APK
+          name: MJ-v3.0.0-debug-APK
           path: MJ-v0.6.1.apk
           if-no-files-found: error
           retention-days: 30
@@ -81,17 +81,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.6.1
-          name: MJ v0.6.1
+          name: MJ v3.0 Liquid
           body: |
-            MJ Android test release (versionName 0.6.1, versionCode 7).
+            MJ Android test release (versionName 3.0-iOS-Liquid, versionCode 8).
 
             Built from the expanded source repository: devmurariparth/pikachu.
 
-            This release installs side-by-side with the earlier com.mj.agent package as com.mj.agent.v06, so you can keep the previous MJ app and its private app data while testing the expanded build.
+            This release installs side-by-side with the previous MJ app as com.mj.aiagent. Keep the previous MJ app and its private app data; this test app uses separate storage.
 
-            Included source capabilities: premium animated assistant orb and chat UI; Gujarati, Hindi and English normalization; local command routing; typed action/tool contracts; permission and policy gate; contact disambiguation and call flow; Spotify, YouTube and YouTube Music provider handling; WhatsApp and SMS intents; task/reminder features; memory controls; vision consent flow; and Android system voice-interaction entry point.
+            Included source capabilities: premium animated assistant orb and chat UI; Gujarati, Hindi and English normalization; local command routing; typed action/tool contracts; permission and policy gate; contact disambiguation and call flow; Spotify, YouTube, YouTube Music and SimpMusic provider handling; media volume commands; active-player next/previous/pause/resume controls; flashlight control with runtime permission; alarm times with minutes; WhatsApp and SMS intents; task/reminder features; memory controls; vision consent flow; and Android system voice-interaction entry point.
 
-            Important limitations: selecting MJ as the default digital assistant is a separate user-controlled Android setting. This is not an always-listening "Hey MJ" hotword. Music providers may open a search/result view rather than guarantee automatic playback. Phone calling requires the appropriate user-granted Contacts/Phone permissions.
+            Important limitations: selecting MJ as the default digital assistant is a separate user-controlled Android setting. This is not an always-listening "Hey MJ" hotword. Music providers may open a search/result view rather than guarantee automatic playback. SimpMusic opens a search or launch intent and does not guarantee autoplay. Media-key commands are sent to Android's active media-key consumer and depend on a compatible player being active. Flashlight access requires camera permission when first used. Phone calling requires the appropriate user-granted Contacts/Phone permissions.
 
             This is a debug-signed testing APK, not a production Play Store release.
           files: MJ-v0.6.1.apk
