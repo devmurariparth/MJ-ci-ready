@@ -367,6 +367,13 @@ object MJBrain {
         }
     }
 
+    fun clearChat() {
+        if (busy) return
+        messages.clear()
+        overlayMsg.value = ""
+        status = S.ready(voiceLang)
+    }
+
     fun stop() {
         job?.cancel()
         Voice.stop()
