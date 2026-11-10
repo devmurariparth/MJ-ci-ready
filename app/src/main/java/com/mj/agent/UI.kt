@@ -183,7 +183,14 @@ private fun Header(lang: Lang) {
                 overflow = TextOverflow.Ellipsis
             )
         }
-        OrbButton(active = active, onClick = { MJBrain.toggleListening() })
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (MJBrain.messages.isNotEmpty()) {
+                TextButton(onClick = { MJBrain.messages.clear() }, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                    Text("Clear", color = TextMuted, fontSize = 12.sp)
+                }
+            }
+            OrbButton(active = active, onClick = { MJBrain.toggleListening() })
+        }
     }
 }
 
