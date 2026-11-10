@@ -173,6 +173,24 @@ object Router {
             return Act("flashlight", JSONObject().put("on", !off))
         }
 
+        // Keep common device settings on the deterministic local path.
+        if (listOf("brightness", "screen brightness", "બ્રાઇટનેસ", "ब्राइटनेस").any(t::contains)) {
+            val value = Regex("""(\\d{1,3})\\s*%?""").find(t)?.groupValues?.get(1)?.toIntOrNull()
+            val mode = when {
+                listOf("max", "maximum", "full", "વધુ", "ज्यादा").any(t::contains) -> "max"
+                listOf("min", "minimum", "low", "ઓછું", "कम").any(t::contains) -> "min"
+                listOf("down", "decrease", "ઘટાડ", "कम कर").any(t::contains) -> "down"
+                listOf("up", "increase", "વધાર", "बढ़ा").any(t::contains) -> "up"
+                value != null -> "set:" + value.coerceIn(0, 100)
+                else -> return null
+            }
+            return Act("brightness", JSONObject().put("mode", mode))
+        }
+
+        if (listOf("screenshot", "screen shot", "સ્ક્રીનશોટ", "સ્ક્રીન શોટ", "स्क्रीनशॉट").any(t::contains)) {
+            return Act("screenshot", JSONObject())
+        }
+
         val callTo = callTarget(t)
         if (callTo != null) return Act("call", JSONObject().put("to", callTo))
 
