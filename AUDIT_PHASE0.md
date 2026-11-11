@@ -47,6 +47,8 @@ Latest observed Actions run: [43051467175](https://github.com/devmurariparth/MJ-
 - Remove the duplicate legacy Android APK workflow; use `build-apk.yml` as the sole authoritative Android CI/release workflow.
 - Configure the authoritative workflow for PR validation (unit tests + lint + APK assembly), while explicitly skipping release publication and wrapper pushes for PR merge refs.
 - Validate supported Settings pages in the agent parser before execution (`wifi`, `bluetooth`, `display`, `main` only).
+- Harden speech recognizer terminal paths: check recognizer availability, clear the 20-second timeout on all terminal callbacks, and destroy recognizer after error callbacks.
+- Add regression cases for malformed/unsupported actions and incomplete alarm/media commands.
 - Expand routing/parser regression tests for question-shaped commands, explicit torch state, invalid action arguments/settings, and braces inside JSON string values.
 - Do not change `main` directly; changes are isolated in `phase0-audit-hardening`.
 
