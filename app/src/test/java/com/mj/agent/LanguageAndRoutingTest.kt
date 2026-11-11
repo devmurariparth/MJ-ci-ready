@@ -110,4 +110,16 @@ class LanguageAndRoutingTest {
         val message = AgentPrompt.parse("""{"a":"whatsapp","to":"Rahul","text":"I am coming"}""")
         assertTrue(message?.name == "whatsapp")
     }
+    @Test
+    fun agentParserRejectsUnknownSettingsPages() {
+        assertTrue(AgentPrompt.parse("""{"a":"settings","page":"secret"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"settings","page":"wifi"}""")?.name == "settings")
+    }
+
+    @Test
+    fun agentParserHandlesBracesInsideJsonStrings() {
+        val parsed = AgentPrompt.parse("""prefix {"a":"done","msg":"literal { brace } and \\n quote"} suffix""")
+        assertTrue(parsed?.name == "done")
+    }
+
 }
