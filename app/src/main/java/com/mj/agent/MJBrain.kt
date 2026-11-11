@@ -409,6 +409,7 @@ object MJBrain {
         var lastSig = ""
         var repeats = 0
         var bad = 0
+        var actionFailures = 0
         val compact = engine.maxTokens <= 1500
         val screenLimit = if (compact) 500 else 1100
         for (step in 1..MAX_STEPS) {
@@ -432,7 +433,16 @@ object MJBrain {
             val res = withContext(Dispatchers.Default) { Executor.run(act, lang) }
             hist.add(act.brief() + " -> " + res.msg.take(80))
             if (res.isFinal) return res.msg
-            delay(900)
+
+            if (!res.ok) {
+                actionFailures++
+                // Give the planner concrete feedback instead of repeating the same failed action.
+                hist.add("ACTION FAILED. Do not repeat this action unchanged. Check SCREEN, choose a supported alternative, or ask the user.")
+                if (actionFailures >= 3) return res.msg.ifBlank { S.failed(lang) }
+            } else {
+                actionFailures = 0
+            }
+            delay(650)
         }
         return S.failed(lang)
     }
