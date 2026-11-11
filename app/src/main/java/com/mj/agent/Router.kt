@@ -148,17 +148,24 @@ object Router {
 
         val timerCue = listOf("timer", "ટાઈમર", "ટાઇમર", "टाइमर").any(t::contains)
         if (timerCue) {
-            val hours = Regex("""(\d+)\s*(?:hours?|hrs?|hr|h|કલાક|घंटे|घंटा)""").find(t)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-            val minutes = Regex("""(\d+)\s*(?:minutes?|mins?|min|મિનિટ|मिनट|मिनटों)""").find(t)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-            val seconds = Regex("""(\d+)\s*(?:seconds?|secs?|sec|સેકન્ડ|सेकंड)""").find(t)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-            val hasUnits = hours > 0 || minutes > 0 || seconds > 0
-            val total = if (hasUnits) hours * 3600 + minutes * 60 + seconds else {
+            // Use bounded Long arithmetic so unusually large spoken values cannot overflow Int.
+            val hours = Regex("""(\d+)\s*(?:hours?|hrs?|hr|h|કલાક|घंटे|घंटा)""")
+                .find(t)?.groupValues?.get(1)?.toLongOrNull()?.coerceAtMost(169L) ?: 0L
+            val minutes = Regex("""(\d+)\s*(?:minutes?|mins?|min|મિનિટ|मिनट|मिनटों)""")
+                .find(t)?.groupValues?.get(1)?.toLongOrNull()?.coerceAtMost(10081L) ?: 0L
+            val seconds = Regex("""(\d+)\s*(?:seconds?|secs?|sec|સેકન્ડ|सेकंड)""")
+                .find(t)?.groupValues?.get(1)?.toLongOrNull()?.coerceAtMost(604801L) ?: 0L
+            val hasUnits = hours > 0L || minutes > 0L || seconds > 0L
+            val total = if (hasUnits) {
+                hours * 3600L + minutes * 60L + seconds
+            } else {
                 Regex("""(?:timer.*?(\d+)|(\d+).*?timer)""").find(t)?.let {
-                    (it.groupValues[1].ifBlank { it.groupValues[2] }).toIntOrNull()?.times(60)
-                } ?: 0
+                    (it.groupValues[1].ifBlank { it.groupValues[2] })
+                        .toLongOrNull()?.coerceAtMost(10081L)?.times(60L)
+                } ?: 0L
             }
-            if (total > 0 && total <= 7 * 24 * 60 * 60) {
-                return Act("timer", JSONObject().put("seconds", total))
+            if (total in 1L..(7L * 24L * 60L * 60L)) {
+                return Act("timer", JSONObject().put("seconds", total.toInt()))
             }
         }
         return null
