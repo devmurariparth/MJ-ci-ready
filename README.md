@@ -45,10 +45,16 @@ Android Studio may offer to install missing Android SDK components (the project 
 - `set alarm for 6:45 AM` / `5 minutes timer`
 - `cricket score google par shodho`
 
-## Latest release: 3.0.2 (versionCode 7)\n\nThis update adds a user-reviewed WhatsApp draft flow, safer staged model replacement with rollback to the previous working model, and a complete Gradle 9.1.0 wrapper for local builds. The APK published by CI is debug-signed for testing, not a Play Store production build.\n\n## Notes and limitations
+## Latest release: 3.0.3 (versionCode 8)
+
+This update improves agent action validation and recovery, prevents phone actions from running in CHAT mode, makes screen text taps safer, preserves unsent input while MJ is busy, improves the floating orb and speech initialization, and restores the previous model after an interrupted or invalid model import. CI now runs regression unit tests, Android lint, and APK assembly.
+
+The APK published by CI is debug-signed for testing, not a Play Store production build.
+
+## Notes and limitations
 
 - Voice activation is tap-to-talk; a background always-listening “Hey MJ” hotword service is not included in this project.
 - Gujarati/Hindi speech recognition and text-to-speech availability depends on language packs and the Android speech/TTS service installed on the phone.
-- WhatsApp opens the matched chat with the message prefilled. MJ does not press Send; review the recipient and message, then send it yourself. Ambiguous contact matches are not guessed.\n- Model imports are copied to a temporary file and checked before replacement. If the new model fails to load, MJ restores the previous model.
+- WhatsApp opens the matched chat with the message prefilled. MJ does not press Send; review the recipient and message, then send it yourself. Ambiguous contact matches are not guessed.\n- Model imports are copied to a temporary file and checked before replacement. The previous model is kept until the new model loads; interrupted or failed replacements are rolled back when possible.
 - A compatible on-device model is required for free-form chat and multi-step agent reasoning. App opening, calling, alarm, timer, flashlight, music search, volume and media-key fast-path commands can work without the model.
 - SimpMusic is handled through the standard Android media-search intent when supported; otherwise MJ opens SimpMusic. This does not guarantee that a track starts automatically.
