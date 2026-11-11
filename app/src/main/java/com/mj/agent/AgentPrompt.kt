@@ -123,6 +123,8 @@ TASK: what is 5 plus 7
         fun number(key: String): Int? = act.intOrNull(key)
         return when (act.name) {
             "open_app", "open" -> hasAny("app", "name")
+            "play_music", "play_song", "music" -> hasAny("query", "song")
+            "flashlight", "torch" -> act.args.has("on") && act.args.opt("on") is Boolean
             "call", "dial" -> hasAny("to", "name")
             "whatsapp", "send_whatsapp", "message" -> hasAny("to", "name") && hasAny("text", "msg")
             "alarm" -> {
