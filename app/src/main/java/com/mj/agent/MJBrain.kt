@@ -143,6 +143,8 @@ object MJBrain {
         try {
             withContext(Dispatchers.Default) { engine.load() }
             modelReady = true
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             modelError = e.message ?: e.javaClass.simpleName
         } finally {
@@ -339,7 +341,8 @@ object MJBrain {
             while (messages.size > 180) messages.removeAt(0)
             messages.add(Msg(true, t))
             try {
-                val quick = Router.quick(t)
+                // CHAT mode must never execute a phone action as a local fast-path.
+                val quick = if (mode == Mode.CHAT) null else Router.quick(t)
                 if (quick != null) {
                     publishStatus(S.step(lang, 1))
                     val res = withContext(Dispatchers.Default) { Executor.run(quick, lang) }
