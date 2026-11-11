@@ -79,4 +79,35 @@ class LanguageAndRoutingTest {
     fun taskClassifierDoesNotTreatAnOrdinaryQuestionAsADeviceCommand() {
         assertFalse(Router.looksLikeTask("What is photosynthesis?"))
     }
+
+    @Test
+    fun quickRouterDoesNotExecuteQuestionShapedRequests() {
+        assertTrue(Router.quick("What is torch mode?") == null)
+        assertTrue(Router.quick("શું ટોર્ચ છે?") == null)
+        assertTrue(Router.quick("How do I set volume to 50?") == null)
+    }
+
+    @Test
+    fun quickRouterRequiresExplicitTorchState() {
+        assertTrue(Router.quick("torch") == null)
+        assertTrue(Router.quick("ટોર્ચ") == null)
+        assertTrue(Router.quick("turn torch on")?.name == "flashlight")
+        assertTrue(Router.quick("ટોર્ચ બંધ કર")?.args?.optBoolean("on") == false)
+    }
+
+    @Test
+    fun agentParserRejectsIncompleteAndOutOfRangeActions() {
+        assertTrue(AgentPrompt.parse("""{"a":"call"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"timer","seconds":0}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"alarm","hour":25,"minute":0}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"whatsapp","to":"Rahul"}""") == null)
+    }
+
+    @Test
+    fun agentParserAcceptsValidSafeDraftActions() {
+        val call = AgentPrompt.parse("""{"a":"call","to":"Rahul"}""")
+        assertTrue(call?.name == "call")
+        val message = AgentPrompt.parse("""{"a":"whatsapp","to":"Rahul","text":"I am coming"}""")
+        assertTrue(message?.name == "whatsapp")
+    }
 }
