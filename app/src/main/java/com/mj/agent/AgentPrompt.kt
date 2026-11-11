@@ -98,10 +98,18 @@ TASK: what is 5 plus 7
         return null
     }
 
+    private val allowedActions = setOf(
+        "open_app", "open", "call", "dial", "play_music", "play_song", "music",
+        "volume", "media_control", "media", "whatsapp", "send_whatsapp", "message",
+        "alarm", "timer", "web", "search", "settings", "flashlight", "torch",
+        "brightness", "screenshot", "click", "tap", "type", "enter", "submit",
+        "scroll", "back", "home", "wait", "done", "answer", "reply", "finish"
+    )
+
     private fun toAct(json: String): Act? = try {
         val o = JSONObject(json)
         val a = o.optString("a", o.optString("action", "")).trim().lowercase()
-        if (a.isEmpty()) null else Act(a, o)
+        if (a !in allowedActions) null else Act(a, o)
     } catch (e: Exception) {
         null
     }
