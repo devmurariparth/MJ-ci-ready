@@ -359,7 +359,13 @@ object MJBrain {
             } catch (e: CancellationException) {
                 reply(S.stopped(lang), lang)
             } catch (e: Throwable) {
-                reply("Error: ${e.message}", lang)
+                val detail = e.message?.take(180)?.takeIf { it.isNotBlank() }
+                val message = when (lang) {
+                    Lang.GU -> if (detail != null) "કામ કરતી વખતે ભૂલ આવી: $detail" else "કામ કરતી વખતે ભૂલ આવી. ફરી પ્રયાસ કરો."
+                    Lang.HI -> if (detail != null) "काम करते समय त्रुटि हुई: $detail" else "काम करते समय त्रुटि हुई। फिर प्रयास करें।"
+                    else -> if (detail != null) "An error occurred: $detail" else "An error occurred. Please try again."
+                }
+                reply(message, lang)
             } finally {
                 busy = false
                 status = S.ready(voiceLang)
