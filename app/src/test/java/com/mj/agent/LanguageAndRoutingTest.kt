@@ -27,6 +27,17 @@ class LanguageAndRoutingTest {
     }
 
     @Test
+    fun detectsRomanGujaratiDeviceCommands() {
+        assertTrue(detectLang("Rahul ne call kar") == Lang.GU)
+        assertTrue(detectLang("YouTube kholo") == Lang.GU)
+    }
+
+    @Test
+    fun detectsRomanHindiDeviceCommands() {
+        assertTrue(detectLang("Rahul ko call karo") == Lang.HI)
+    }
+
+    @Test
     fun defaultsToEnglishForUnmarkedLatinText() {
         assertTrue(detectLang("Hello, how are you?") == Lang.EN)
     }
