@@ -71,6 +71,11 @@ object MJBrain {
 
     private fun prefs() = app.getSharedPreferences("mj", Context.MODE_PRIVATE)
 
+    private fun hasModelOrBackup(): Boolean {
+        val backup = File(app.filesDir, "model.task.backup")
+        return engine.hasModel() || (backup.exists() && backup.length() > 50_000_000L)
+    }
+
     fun updateVoiceLang(l: Lang) {
         voiceLang = l
         prefs().edit().putString("lang", l.name).apply()
@@ -123,7 +128,7 @@ object MJBrain {
     fun loadModelAsync() {
         scope.launch {
             if (importProgress >= 0) return@launch
-            if (!modelReady && engine.hasModel()) loadModelSuspend()
+            if (!modelReady && hasModelOrBackup()) loadModelSuspend()
             if (!busy && !listening) status = S.ready(voiceLang)
         }
     }
@@ -203,6 +208,7 @@ object MJBrain {
             modelReady = false
             modelError = e.message ?: e.javaClass.simpleName
         } finally {
+            modelPresent = engine.hasModel()
             modelLoading = false
             status = if (busy) old else S.ready(voiceLang)
         }
@@ -210,7 +216,7 @@ object MJBrain {
 
     private suspend fun ensureModel(): Boolean {
         if (modelReady) return true
-        if (!engine.hasModel()) return false
+        if (!hasModelOrBackup()) return false
         loadModelSuspend()
         return modelReady
     }
