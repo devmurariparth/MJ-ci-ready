@@ -1,5 +1,6 @@
 package com.mj.agent
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -7,9 +8,10 @@ import kotlinx.coroutines.withContext
 /** Model ni action ne asli kam ma badle che. */
 object Executor {
     suspend fun run(act: Act, lang: Lang): Res {
-        val svc = MJAccessibilityService.instance
-        val noA11y = Res(false, S.needAccessibility(lang), true)
-        return when (act.name) {
+        return try {
+            val svc = MJAccessibilityService.instance
+            val noA11y = Res(false, S.needAccessibility(lang), true)
+            when (act.name) {
             "open_app", "open" -> Device.openApp(act.str("app").ifBlank { act.str("name") }, lang)
             "call", "dial" -> Device.call(act.str("to").ifBlank { act.str("name") }, lang)
             "play_music", "play_song", "music" -> Device.playMusic(
@@ -67,6 +69,12 @@ object Executor {
             "done", "answer", "reply", "finish" ->
                 Res(true, act.str("msg").ifBlank { act.str("text") }.ifBlank { S.done(lang) }, true)
             else -> Res(false, "unknown action: ${act.name}")
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Keep one failing device action from aborting the complete agent task.
+            Res(false, "Action failed (${e.javaClass.simpleName}). Try a supported alternative.")
         }
     }
 }
