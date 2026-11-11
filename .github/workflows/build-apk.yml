@@ -1,4 +1,4 @@
-name: Build MJ-ci-ready 3.0.2 and Publish APK
+name: Build MJ-ci-ready 3.0.3 and Publish APK
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: mj-ci-ready-3-0-2
+  group: mj-ci-ready-3-0-3
   cancel-in-progress: false
 
 jobs:
@@ -82,37 +82,39 @@ jobs:
         run: |
           set -euo pipefail
           test -s app/build/outputs/apk/debug/app-debug.apk
-          cp app/build/outputs/apk/debug/app-debug.apk MJ-v3.0.2.apk
-          ls -lh MJ-v3.0.2.apk
-          sha256sum MJ-v3.0.2.apk
+          cp app/build/outputs/apk/debug/app-debug.apk MJ-v3.0.3.apk
+          ls -lh MJ-v3.0.3.apk
+          sha256sum MJ-v3.0.3.apk
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v7
         with:
-          name: MJ-v3.0.2-debug-APK
-          path: MJ-v3.0.2.apk
+          name: MJ-v3.0.3-debug-APK
+          path: MJ-v3.0.3.apk
           if-no-files-found: error
           retention-days: 30
 
       - name: Publish GitHub Release with MJ-ci-ready APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.0.2
-          name: MJ 3.0.2 (MJ-ci-ready source)
+          tag_name: v3.0.3
+          name: MJ 3.0.3 (MJ-ci-ready source)
           body: |
             MJ Android test release.
 
             Built directly from devmurariparth/MJ-ci-ready, not from another repository.
             Package ID: com.mj.agent
-            versionName: 3.0.2
-            versionCode: 7
+            versionName: 3.0.3
+            versionCode: 8
 
             Included: Gujarati/Hindi/English tap-to-talk assistant; local app launch, contact lookup and dialer, WhatsApp, alarms with minutes, timers with hours/minutes/seconds, flashlight, Spotify, YouTube, YouTube Music and SimpMusic routing; media volume up/down/set/mute/unmute; next/previous/pause/resume media-key commands; MediaPipe on-device chat/agent; floating accessibility orb; and the existing glass-style Compose interface.
 
             SimpMusic uses the standard Android media-search intent when supported; otherwise MJ opens the SimpMusic app. Automatic playback is not guaranteed. Media-key commands are sent to Android's active media-key consumer.
 
-            WhatsApp opens a reviewed, prefilled draft; MJ never presses Send automatically. Model replacement is staged and the previous working model is restored if the new model cannot load.\n\nThis is a debug-signed test APK, not a production Play Store release. Android only permits an in-place update when the signing certificate matches the installed app. If the installed v0.5.0 build has a different debug certificate, Android may require removing that old build before installing this one; its private app data (including an imported model) may then need to be restored or imported again.
-          files: MJ-v3.0.2.apk
+            WhatsApp opens a reviewed, prefilled draft; MJ never presses Send automatically. Model replacement is staged and the previous working model is restored if the new model cannot load.
+
+This is a debug-signed test APK, not a production Play Store release. Android only permits an in-place update when the signing certificate matches the installed app. If the installed v0.5.0 build has a different debug certificate, Android may require removing that old build before installing this one; its private app data (including an imported model) may then need to be restored or imported again.
+          files: MJ-v3.0.3.apk
           fail_on_unmatched_files: true
           overwrite_files: true
           make_latest: true
