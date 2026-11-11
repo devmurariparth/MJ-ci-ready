@@ -183,8 +183,10 @@ object Router {
     }
 
     fun quick(text: String): Act? {
-        val t = text.trim().trimEnd('.', '!', '?', '।').lowercase()
-        if (t.isEmpty() || t.length > 120 || questionRx.containsMatchIn(t)) return null
+        val original = text.trim()
+        val t = original.trimEnd('.', '!', '?', '।', '？', '؟').lowercase()
+        val isQuestion = original.endsWith("?") || original.endsWith("？") || original.endsWith("؟")
+        if (t.isEmpty() || t.length > 120 || isQuestion || questionRx.containsMatchIn(t)) return null
 
         if (torchRx.containsMatchIn(t)) {
             val off = offRx.containsMatchIn(t)
