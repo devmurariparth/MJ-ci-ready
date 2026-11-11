@@ -45,7 +45,16 @@ Latest observed Actions run: [43051467175](https://github.com/devmurariparth/MJ-
 
 - Retain a reproducible audit report.
 - Remove the duplicate legacy Android APK workflow; use `build-apk.yml` as the sole authoritative Android CI/release workflow.
+- Configure the authoritative workflow for PR validation (unit tests + lint + APK assembly), while explicitly skipping release publication and wrapper pushes for PR merge refs.
+- Validate supported Settings pages in the agent parser before execution (`wifi`, `bluetooth`, `display`, `main` only).
+- Expand routing/parser regression tests for question-shaped commands, explicit torch state, invalid action arguments/settings, and braces inside JSON string values.
 - Do not change `main` directly; changes are isolated in `phase0-audit-hardening`.
+
+## Prior-upgrade completion checkpoint (Phase 0.1)
+
+**Completed in this branch:** repository audit, duplicate workflow cleanup, PR-safe CI workflow configuration, parser guard for Settings pages, and expanded regression tests.
+
+**Still pending before Phase 1:** fresh CI execution for this branch (workflow changes live in the PR and require the PR to be merged or otherwise run by GitHub Actions); Android real-device validation; Windows companion implementation; Gemini/OpenAI provider adapter and secure key setup; and optional always-on hotword feasibility/implementation. These are not claimed as complete. Hotword requires an explicit foreground/background microphone design and Android restrictions; do not promise reliable lock-screen wake detection without device testing.
 
 ## Phase 1 priorities
 
