@@ -144,9 +144,22 @@ class MJAccessibilityService : AccessibilityService() {
     }
 
     fun typeText(text: String, id: Int?): Boolean {
-        var target: AccessibilityNodeInfo? = id?.let { nodes.getOrNull(it) }
-        if (target == null || !target.isEditable) target = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
-        if (target == null || !target.isEditable) target = nodes.firstOrNull { it.isEditable }
+        // Prefer the requested field, then the currently focused field.
+        var target: AccessibilityNodeInfo? = id?.let { nodes.getOrNull(it) }?.takeIf { it.isEditable }
+        if (target == null) {
+            target = rootInActiveWindow
+                ?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+                ?.takeIf { it.isEditable }
+        }
+        if (target == null) {
+            // Never guess between multiple editable fields (for example, username and password).
+            val editable = nodes.filter { it.isEditable }.distinctBy { node ->
+                val bounds = Rect()
+                node.getBoundsInScreen(bounds)
+                "${bounds.left},${bounds.top},${bounds.right},${bounds.bottom}"
+            }
+            target = editable.singleOrNull()
+        }
         if (target == null) return false
         target.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
         val args = Bundle().apply {
