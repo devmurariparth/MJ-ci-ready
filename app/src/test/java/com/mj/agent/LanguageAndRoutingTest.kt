@@ -128,6 +128,8 @@ class LanguageAndRoutingTest {
         assertTrue(AgentPrompt.parse("""{"a":"mystery_action"}""") == null)
         assertTrue(AgentPrompt.parse("""{"a":"timer","seconds":"five"}""") == null)
         assertTrue(AgentPrompt.parse("""{"a":"alarm","hour":7}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"alarm","hour":7.5,"minute":0}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"timer","seconds":1.5}""") == null)
         assertTrue(AgentPrompt.parse("""{"a":"media_control","action":"delete"}""") == null)
         assertTrue(AgentPrompt.parse("""{"a":"scroll","dir":"sideways"}""") == null)
         assertTrue(AgentPrompt.parse("""{"a":"brightness","mode":"set:101"}""") == null)
