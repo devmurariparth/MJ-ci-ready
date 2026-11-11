@@ -156,8 +156,11 @@ fun MainScreen(
             input = input,
             onChange = { input = it },
             onSend = {
-                MJBrain.submit(input)
-                input = ""
+                // Keep the draft when a task is already running; submit() ignores busy requests.
+                if (!MJBrain.busy) {
+                    MJBrain.submit(input)
+                    input = ""
+                }
             }
         )
     }
