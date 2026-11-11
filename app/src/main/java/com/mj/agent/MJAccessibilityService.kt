@@ -151,7 +151,7 @@ class MJAccessibilityService : AccessibilityService() {
         if (Build.VERSION.SDK_INT < 30) return false
         return try {
             takeScreenshot(
-                AccessibilityService.SCREENSHOT_TYPE_FULLSCREEN,
+                android.view.Display.DEFAULT_DISPLAY,
                 mainExecutor,
                 object : AccessibilityService.TakeScreenshotCallback {
                     override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
