@@ -36,6 +36,10 @@ object Voice {
             main.post { if (currentSession == sessionId) stop() }
             onFail(code)
         }
+        if (!SpeechRecognizer.isRecognitionAvailable(ctx)) {
+            failOnce(SpeechRecognizer.ERROR_CLIENT)
+            return
+        }
         val r = try {
             SpeechRecognizer.createSpeechRecognizer(ctx.applicationContext)
         } catch (_: RuntimeException) {
