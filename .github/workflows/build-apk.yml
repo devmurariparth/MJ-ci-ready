@@ -113,7 +113,7 @@ jobs:
 
             WhatsApp opens a reviewed, prefilled draft; MJ never presses Send automatically. Model replacement is staged and the previous working model is restored if the new model cannot load.
 
-This is a debug-signed test APK, not a production Play Store release. Android only permits an in-place update when the signing certificate matches the installed app. If the installed v0.5.0 build has a different debug certificate, Android may require removing that old build before installing this one; its private app data (including an imported model) may then need to be restored or imported again.
+            This is a debug-signed test APK, not a production Play Store release. Android only permits an in-place update when the signing certificate matches the installed app. If the installed v0.5.0 build has a different debug certificate, Android may require removing that old build before installing this one; its private app data (including an imported model) may then need to be restored or imported again.
           files: MJ-v3.0.3.apk
           fail_on_unmatched_files: true
           overwrite_files: true
