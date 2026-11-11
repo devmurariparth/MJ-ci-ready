@@ -92,8 +92,10 @@ class Overlay(private val svc: AccessibilityService) {
                     val dy = (e.rawY - sy).toInt()
                     if (abs(dx) > 10 || abs(dy) > 10) moved = true
                     if (moved) {
-                        lp.x = ox + dx
-                        lp.y = oy + dy
+                        val display = svc.resources.displayMetrics
+                        // Keep the orb reachable; dragging beyond an edge must not hide it.
+                        lp.x = (ox + dx).coerceIn(0, (display.widthPixels - dp(54)).coerceAtLeast(0))
+                        lp.y = (oy + dy).coerceIn(0, (display.heightPixels - dp(54)).coerceAtLeast(0))
                         try { wm.updateViewLayout(container, lp) } catch (_: Throwable) {}
                     }
                     true
