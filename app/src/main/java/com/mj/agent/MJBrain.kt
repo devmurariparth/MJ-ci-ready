@@ -97,8 +97,10 @@ object MJBrain {
         modelPresent = engine.hasModel()
         val enabled = Settings.Secure.getString(ctx.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: ""
         a11yOn = enabled.contains(ctx.packageName + "/") && enabled.contains("MJAccessibilityService")
-        permsOk = listOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.READ_CONTACTS, Manifest.permission.CAMERA)
-            .all { ContextCompat.checkSelfPermission(ctx, it) == PackageManager.PERMISSION_GRANTED }
+        // Voice readiness depends only on microphone. Contacts is optional and checked on call;
+        // camera is not used by current MJ features.
+        permsOk = ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
         Apps.refresh()
     }
 
