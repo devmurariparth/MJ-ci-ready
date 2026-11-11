@@ -117,7 +117,10 @@ class MJAccessibilityService : AccessibilityService() {
                 (node.text?.toString()?.trim()?.equals(query, ignoreCase = true) == true ||
                     node.contentDescription?.toString()?.trim()?.equals(query, ignoreCase = true) == true)
         }
-        val unique = matches.distinctBy { node ->
+        // Several accessibility nodes can describe one button (for example, a
+        // clickable parent and its text child). Resolve to the clickable target first.
+        val targets = matches.map { clickableAncestor(it) ?: it }
+        val unique = targets.distinctBy { node ->
             val bounds = Rect()
             node.getBoundsInScreen(bounds)
             "${bounds.left},${bounds.top},${bounds.right},${bounds.bottom}"
