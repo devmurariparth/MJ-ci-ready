@@ -13,6 +13,8 @@ import android.speech.SpeechRecognizer
 object Voice {
     private var rec: SpeechRecognizer? = null
     private var sessionId = 0
+    private val main = Handler(Looper.getMainLooper())
+    private var timeout: Runnable? = null
 
     fun available(ctx: Context): Boolean = SpeechRecognizer.isRecognitionAvailable(ctx)
 
@@ -34,6 +36,14 @@ object Voice {
             return
         }
         rec = r
+        val timeoutTask = Runnable {
+            if (currentSession == sessionId && !delivered) {
+                failOnce(SpeechRecognizer.ERROR_SPEECH_TIMEOUT)
+                stop()
+            }
+        }
+        timeout = timeoutTask
+        main.postDelayed(timeoutTask, 20_000L)
         r.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {}
             override fun onBeginningOfSpeech() {}
@@ -51,7 +61,7 @@ object Voice {
                 val t = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
                 if (currentSession != sessionId || delivered) return
                 delivered = true
-                Handler(Looper.getMainLooper()).post { if (currentSession == sessionId) stop() }
+                main.post { if (currentSession == sessionId) stop() }
                 if (t.isNullOrBlank()) onFail(SpeechRecognizer.ERROR_NO_MATCH) else onResult(t)
             }
 
@@ -77,6 +87,8 @@ object Voice {
     }
 
     fun stop() {
+        timeout?.let(main::removeCallbacks)
+        timeout = null
         sessionId++
         try { rec?.destroy() } catch (_: Throwable) {}
         rec = null
