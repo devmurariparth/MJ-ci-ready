@@ -33,6 +33,7 @@ object Voice {
             delivered = true
             timeout?.let(main::removeCallbacks)
             timeout = null
+            main.post { if (currentSession == sessionId) stop() }
             onFail(code)
         }
         val r = try {
