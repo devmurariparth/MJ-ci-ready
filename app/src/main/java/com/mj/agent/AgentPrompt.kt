@@ -148,7 +148,9 @@ TASK: what is 5 plus 7
             }
             "media_control", "media" -> act.str("action").lowercase() in setOf("next", "previous", "pause", "resume", "play")
             "scroll" -> act.str("dir").lowercase() in setOf("up", "down")
-            else -> true
+            "screenshot", "enter", "submit", "back", "home", "wait" -> true
+            "done", "answer", "reply", "finish" -> true
+            else -> false
         }
     }
 }
