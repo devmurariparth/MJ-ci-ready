@@ -122,4 +122,12 @@ class LanguageAndRoutingTest {
         assertTrue(parsed?.name == "done")
     }
 
+    @Test
+    fun agentParserRejectsUnsupportedActionsAndMalformedJson() {
+        assertTrue(AgentPrompt.parse("""{"a":"launch_nuke"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"timer","seconds":"five"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"alarm","hour":7}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"media_control","action":"delete"}""") == null)
+    }
+
 }
