@@ -128,7 +128,7 @@ object MJBrain {
         }
     }
 
-    private suspend fun loadModelSuspend() {
+    private suspend fun loadModelSuspend(recoverBackup: Boolean = true) {
         // Never open the model while another coroutine is replacing it.
         if (importProgress >= 0) return
         if (modelLoading) {
@@ -139,13 +139,68 @@ object MJBrain {
         modelLoading = true
         modelError = ""
         val old = status
+        val target = engine.modelFile()
+        val backup = File(app.filesDir, "model.task.backup")
         status = S.loadingModel(voiceLang)
         try {
-            withContext(Dispatchers.Default) { engine.load() }
-            modelReady = true
+            var restoredMissingTarget = false
+            if (recoverBackup && !target.exists() && backup.exists()) {
+                withContext(Dispatchers.IO) {
+                    java.nio.file.Files.move(
+                        backup.toPath(), target.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    )
+                }
+                restoredMissingTarget = true
+            }
+
+            try {
+                withContext(Dispatchers.Default) { engine.load() }
+                modelReady = true
+                // A backup is retained until the candidate model has loaded successfully.
+                if (recoverBackup && backup.exists()) {
+                    withContext(Dispatchers.IO) { backup.delete() }
+                }
+                if (restoredMissingTarget) {
+                    modelError = "The previous model was restored after an interrupted import."
+                }
+            } catch (loadError: Throwable) {
+                if (loadError is CancellationException) throw loadError
+                if (!recoverBackup || !target.exists() || !backup.exists()) throw loadError
+
+                // The target was an unverified import candidate. Restore the last known model.
+                withContext(Dispatchers.Default) { engine.unload() }
+                withContext(Dispatchers.IO) {
+                    val rejected = File(app.filesDir, "model.task.rejected")
+                    rejected.delete()
+                    java.nio.file.Files.move(
+                        target.toPath(), rejected.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    )
+                    java.nio.file.Files.move(
+                        backup.toPath(), target.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    )
+                    rejected.delete()
+                }
+                try {
+                    withContext(Dispatchers.Default) { engine.load() }
+                    modelReady = true
+                    modelError = "An interrupted model import could not be loaded. The previous model was restored."
+                } catch (restoreError: Throwable) {
+                    if (restoreError is CancellationException) throw restoreError
+                    modelReady = false
+                    throw IllegalStateException(
+                        "The imported model failed to load and the previous model could not be reloaded: " +
+                            (restoreError.message ?: restoreError.javaClass.simpleName),
+                        restoreError
+                    )
+                }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
+            modelReady = false
             modelError = e.message ?: e.javaClass.simpleName
         } finally {
             modelLoading = false
@@ -248,7 +303,8 @@ object MJBrain {
                 }
 
                 modelPresent = engine.hasModel()
-                loadModelSuspend()
+                // The import transaction owns rollback; do not let startup recovery move its backup.
+                loadModelSuspend(recoverBackup = false)
                 if (!modelReady) {
                     throw IllegalArgumentException(
                         modelError.ifBlank { "The selected model could not be loaded." }
