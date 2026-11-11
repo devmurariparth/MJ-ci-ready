@@ -106,15 +106,15 @@ TASK: what is 5 plus 7
         "scroll", "back", "home", "wait", "done", "answer", "reply", "finish"
     )
 
-    private fun toAct(json: String): Act? = try {
-        val o = JSONObject(json)
-        val a = o.optString("a", o.optString("action", "")).trim().lowercase()
-        if (a !in allowedActions) return null
-        val act = Act(a, o)
-        if (!validArguments(act)) return null
-        act
-    } catch (e: Exception) {
-        null
+    private fun toAct(json: String): Act? {
+        return try {
+            val o = JSONObject(json)
+            val a = o.optString("a", o.optString("action", "")).trim().lowercase()
+            if (a !in allowedActions) null
+            else Act(a, o).takeIf { validArguments(it) }
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /** Reject incomplete or out-of-range model actions before they reach Executor. */
