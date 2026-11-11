@@ -133,6 +133,7 @@ TASK: what is 5 plus 7
             }
             "timer" -> number("seconds")?.let { it > 0 } == true
             "web", "search" -> hasAny("q", "query")
+            "settings" -> act.str("page").lowercase() in setOf("wifi", "bluetooth", "display", "main")
             "click", "tap" -> (number("id")?.let { it >= 0 } == true) || hasAny("text")
             "type" -> hasAny("text")
             "brightness" -> {
