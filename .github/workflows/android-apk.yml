@@ -27,7 +27,7 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
       - name: Build debug APK
-        run: gradle --no-daemon assembleDebug --stacktrace
+        run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug --stacktrace
       - name: Verify APK
         run: test -s app/build/outputs/apk/debug/app-debug.apk
       - name: Upload APK artifact
