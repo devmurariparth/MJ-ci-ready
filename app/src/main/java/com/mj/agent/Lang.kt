@@ -6,8 +6,16 @@ enum class Lang(val label: String, val tag: String, val instruction: String) {
     EN("English", "en-IN", "Reply ONLY in English.")
 }
 
-private val guMarkers = setOf("kem", "cho", "chhe", "che", "shu", "mane", "tame", "tamne", "hu", "mari", "tari", "nathi", "joiye", "aapo", "apo", "ketla", "kyare", "moklo")
-private val hiMarkers = setOf("hai", "kaise", "mujhe", "kya", "nahi", "mera", "karo", "batao", "kyun", "kaun", "bhejo", "mujhko")
+private val guMarkers = setOf(
+    "kem", "cho", "chhe", "che", "shu", "mane", "tame", "tamne", "hu", "mari", "tari",
+    "nathi", "joiye", "aapo", "apo", "ketla", "kyare", "moklo", "ne", "karjo",
+    "kholo", "khol", "muk", "muko", "awaj", "avaj", "ochho", "ochu", "shodh",
+    "vagado", "vagadu", "aavu", "chu", "chhu"
+)
+private val hiMarkers = setOf(
+    "hai", "kaise", "mujhe", "kya", "nahi", "mera", "karo", "batao", "kyun",
+    "kaun", "bhejo", "mujhko", "ko", "karna", "lagao"
+)
 
 /** Script thi bhasha oLakhvi. Roman Gujarati/Hindi mate marker shabdo. */
 fun detectLang(text: String): Lang {
