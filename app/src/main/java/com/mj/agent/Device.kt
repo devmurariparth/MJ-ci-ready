@@ -145,12 +145,35 @@ object Device {
         } else Res(false, S.musicAppUnavailable(lang), true)
     }
 
-    /** Adjust screen brightness through the system brightness setting (no privileged API). */
+    /** Changes system brightness only after the user grants Android's special write-settings access. */
     fun brightness(modeRaw: String, lang: Lang): Res {
+        val c = ctx()
         val mode = modeRaw.trim().lowercase()
-        val intent = Intent(Settings.ACTION_DISPLAY_SETTINGS)
-        return if (launch(intent)) Res(true, "Display settings opened. Adjust brightness there.", true)
-        else Res(false, S.failed(lang), true)
+        if (!Settings.System.canWrite(c)) {
+            val permissionIntent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                Uri.parse("package:" + c.packageName))
+            return if (launch(permissionIntent))
+                Res(false, "MJ needs 'Modify system settings' access. Enable it, then repeat the brightness command.", true)
+            else Res(false, S.failed(lang), true)
+        }
+        return try {
+            val current = Settings.System.getInt(c.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 128)
+            val target = when {
+                mode.startsWith("set:") -> mode.substringAfter("set:").toIntOrNull()?.coerceIn(0, 100)?.times(255)?.div(100)
+                mode == "max" -> 255
+                mode == "min" -> 10
+                mode == "up" -> (current + 32).coerceAtMost(255)
+                mode == "down" -> (current - 32).coerceAtLeast(10)
+                else -> null
+            } ?: return Res(false, "Say brightness 50%, brightness up, down, max or min.", true)
+            val saved = Settings.System.putInt(c.contentResolver, Settings.System.SCREEN_BRIGHTNESS, target)
+            if (saved) Res(true, "Brightness set to ${target * 100 / 255}%.", true)
+            else Res(false, S.failed(lang), true)
+        } catch (_: SecurityException) {
+            Res(false, "Android denied brightness access. Enable Modify system settings for MJ.", true)
+        } catch (_: Exception) {
+            Res(false, S.failed(lang), true)
+        }
     }
 
     /** Controls only the media stream, not ringtone or alarm volume. */
