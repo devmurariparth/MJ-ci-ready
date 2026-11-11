@@ -136,4 +136,24 @@ class LanguageAndRoutingTest {
         assertTrue(AgentPrompt.parse("""{"a":"volume","mode":"set:-1"}""") == null)
     }
 
+    @Test
+    fun agentParserAcceptsAllCoreValidatedActionShapes() {
+        val valid = listOf(
+            """{"a":"open_app","app":"YouTube"}""",
+            """{"a":"play_music","query":"lofi"}""",
+            """{"a":"flashlight","on":true}""",
+            """{"a":"volume","mode":"mute"}""",
+            """{"a":"brightness","mode":"set:100"}""",
+            """{"a":"media_control","action":"next"}""",
+            """{"a":"settings","page":"wifi"}""",
+            """{"a":"web","q":"weather"}""",
+            """{"a":"click","id":0}""",
+            """{"a":"type","text":"hello"}""",
+            """{"a":"scroll","dir":"up"}""",
+            """{"a":"done","msg":"finished"}"""
+        )
+        valid.forEach { json -> assertTrue("Expected valid action: $json", AgentPrompt.parse(json) != null) }
+        assertTrue(AgentPrompt.parse("""{"a":"flashlight","on":"true"}""") == null)
+    }
+
 }
