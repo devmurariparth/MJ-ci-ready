@@ -427,8 +427,14 @@ object MJBrain {
             val act = AgentPrompt.parse(raw)
             if (act == null) {
                 bad++
-                if (bad >= 2) return S.failed(lang)
-                hist.add("invalid output, reply with ONE JSON object only")
+                if (bad >= 3) return S.failed(lang)
+                // Recover from malformed/unsupported model output with actionable validation feedback.
+                hist.add(
+                    "INVALID ACTION (attempt $bad/3): output must be exactly one JSON object; " +
+                    "use only supported action names and include every required argument with valid values. " +
+                    "If details are missing, ask the user via done instead of guessing."
+                )
+                delay(350)
                 continue
             }
             val sig = act.toString()
