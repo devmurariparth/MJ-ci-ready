@@ -28,4 +28,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.google.guava:guava:33.3.1-android")
     implementation("com.google.mediapipe:tasks-genai:0.10.24")
+
+    testImplementation("junit:junit:4.13.2")
 }
