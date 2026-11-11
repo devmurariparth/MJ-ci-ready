@@ -175,7 +175,7 @@ object Router {
 
         // Keep common device settings on the deterministic local path.
         if (listOf("brightness", "screen brightness", "બ્રાઇટનેસ", "ब्राइटनेस").any(t::contains)) {
-            val value = Regex("""(\\d{1,3})\\s*%?""").find(t)?.groupValues?.get(1)?.toIntOrNull()
+            val value = Regex("""(\d{1,3})\s*%?""").find(t)?.groupValues?.get(1)?.toIntOrNull()
             val mode = when {
                 listOf("max", "maximum", "full", "વધુ", "ज्यादा").any(t::contains) -> "max"
                 listOf("min", "minimum", "low", "ઓછું", "कम").any(t::contains) -> "min"
