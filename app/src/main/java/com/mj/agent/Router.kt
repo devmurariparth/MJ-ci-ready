@@ -30,6 +30,12 @@ object Router {
 
     private val torchRx = Regex("torch|flash ?light|ટોર્ચ|ફ્લેશલાઇટ|ફ્લેશલાઈટ|टॉर्च|टार्च|फ्लैशलाइट")
     private val offRx = Regex("\\boff\\b|\\bband\\b|\\bbandh\\b|બંધ|बंद")
+    private val onRx = Regex("\\bon\\b|\\bchalu\\b|\\bchaalu\\b|ચાલુ|चालू")
+    private val questionRx = Regex(
+        "^(?:what\\b|why\\b|how\\b|when\\b|where\\b|who\\b|which\\b|explain\\b|" +
+            "tell me (?:about|why|how)\\b|શું\\b|શા માટે|કેમ\\b|ક્યારે\\b|કોણ\\b|કેવી રીતે|" +
+            "क्या\\b|क्यों\\b|कैसे\\b|कब\\b|कहाँ\\b|कौन\\b)"
+    )
     private val openEn = Regex("^(?:please\\s+)?(?:open|launch|start)\\s+(?:the\\s+)?(.+?)(?:\\s+app)?$")
     private val openIn = Regex("^(.+?)\\s+(?:ખોલી દે|ખોલી આપો|ખોલો|ખોલ|खोल दो|खोलिए|खोलें|खोलो|खोल|kholo|khol do|khol de|khol|open kar|open karo|chalu kar)$")
 
@@ -55,10 +61,13 @@ object Router {
     }
 
     private fun musicAction(t: String): Act? {
-        val hasPlayIntent = listOf(
-            "play ", "listen to ", "put on ", "chalao", "chala", "vagado", "vagadu",
-            "bajao", "વગાડ", "ચાલાવો", "બજાવો", "चलाओ", "बजाओ"
-        ).any { t.contains(it) }
+        val startsWithPlayIntent = listOf("please play ", "play ", "listen to ", "put on ")
+            .any(t::startsWith)
+        val endsWithPlayIntent = listOf(
+            "chalao", "chala", "vagado", "vagadu", "bajao",
+            "વગાડ", "ચાલાવો", "બજાવો", "चलाओ", "बजाओ"
+        ).any(t::endsWith)
+        val hasPlayIntent = startsWithPlayIntent || endsWithPlayIntent
         if (!hasPlayIntent) return null
 
         val provider = when {
@@ -116,11 +125,13 @@ object Router {
         val mode = when {
             numeric != null -> "set:" + (numeric.groupValues[1].toIntOrNull() ?: 0)
             listOf("unmute", "un-mute", "sound on", "awaj chalu", "આવાજ ચાલુ", "आवाज़ चालू").any(t::contains) -> "unmute"
-            listOf("mute", "silent", "zero", "આવાજ બંધ", "आवाज़ बंद").any(t::contains) -> "mute"
+            listOf("mute", "silent", "zero", "sound off", "volume off", "આવાજ બંધ", "आवाज़ बंद").any(t::contains) -> "mute"
             listOf("full", "maximum", "max").any(t::contains) -> "max"
             listOf("down", "decrease", "lower", "low", "less", "ochho", "ochu", "ocho", "ghatad",
                 "ઓછો", "ઘટાડ", "कम", "घटाओ").any(t::contains) -> "down"
-            else -> "up"
+            listOf("up", "increase", "raise", "higher", "louder", "vadharo", "vadhaaro", "badhao",
+                "વધાર", "વધારો", "बढ़ा", "ज्यादा").any(t::contains) -> "up"
+            else -> return null
         }
         return Act("volume", JSONObject().put("mode", mode))
     }
@@ -173,10 +184,12 @@ object Router {
 
     fun quick(text: String): Act? {
         val t = text.trim().trimEnd('.', '!', '?', '।').lowercase()
-        if (t.isEmpty() || t.length > 120) return null
+        if (t.isEmpty() || t.length > 120 || questionRx.containsMatchIn(t)) return null
 
         if (torchRx.containsMatchIn(t)) {
             val off = offRx.containsMatchIn(t)
+            val on = onRx.containsMatchIn(t)
+            if (!off && !on) return null
             return Act("flashlight", JSONObject().put("on", !off))
         }
 
@@ -194,9 +207,14 @@ object Router {
             return Act("brightness", JSONObject().put("mode", mode))
         }
 
-        if (listOf("screenshot", "screen shot", "સ્ક્રીનશોટ", "સ્ક્રીન શોટ", "स्क्रीनशॉट").any(t::contains)) {
-            return Act("screenshot", JSONObject())
-        }
+        val screenshotCue = listOf("screenshot", "screen shot", "સ્ક્રીનશોટ", "સ્ક્રીન શોટ", "स्क्रीनशॉट").any(t::contains)
+        val screenshotIntent = t == "screenshot" || t == "screen shot" ||
+            listOf(
+                "take screenshot", "capture screenshot", "save screenshot", "screenshot lo", "screenshot le",
+                "સ્ક્રીનશોટ લો", "સ્ક્રીનશોટ લઈ", "સ્ક્રીનશોટ લેજો", "સ્ક્રીનશોટ પાડ",
+                "स्क्रीनशॉट लो", "स्क्रीनशॉट ले"
+            ).any(t::contains)
+        if (screenshotCue && screenshotIntent) return Act("screenshot", JSONObject())
 
         val callTo = callTarget(t)
         if (callTo != null) return Act("call", JSONObject().put("to", callTo))
