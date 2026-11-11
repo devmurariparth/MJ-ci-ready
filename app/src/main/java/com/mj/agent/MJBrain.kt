@@ -133,14 +133,17 @@ object MJBrain {
         }
     }
 
-    private suspend fun loadModelSuspend(recoverBackup: Boolean = true) {
+    private suspend fun loadModelSuspend(
+        recoverBackup: Boolean = true,
+        allowDuringImport: Boolean = false
+    ) {
         // Never open the model while another coroutine is replacing it.
-        if (importProgress >= 0) return
+        if (importProgress >= 0 && !allowDuringImport) return
         if (modelLoading) {
             while (modelLoading) delay(300)
             return
         }
-        if (importProgress >= 0) return
+        if (importProgress >= 0 && !allowDuringImport) return
         modelLoading = true
         modelError = ""
         val old = status
@@ -310,7 +313,7 @@ object MJBrain {
 
                 modelPresent = engine.hasModel()
                 // The import transaction owns rollback; do not let startup recovery move its backup.
-                loadModelSuspend(recoverBackup = false)
+                loadModelSuspend(recoverBackup = false, allowDuringImport = true)
                 if (!modelReady) {
                     throw IllegalArgumentException(
                         modelError.ifBlank { "The selected model could not be loaded." }
@@ -366,7 +369,7 @@ object MJBrain {
                 modelReady = false
                 modelPresent = engine.hasModel()
                 if (modelPresent && restoreFailure == null) {
-                    loadModelSuspend()
+                    loadModelSuspend(allowDuringImport = true)
                     modelError = if (modelReady) {
                         "Import failed: $importFailure. The previous model was restored."
                     } else {
