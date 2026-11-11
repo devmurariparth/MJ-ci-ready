@@ -28,7 +28,18 @@ object Voice {
         stop()
         val currentSession = ++sessionId
         var delivered = false
-        fun failOnce(code: Int) { if (currentSession != sessionId || delivered) return; delivered = true; onFail(code) }
+        fun failOnce(code: Int) {
+            if (currentSession != sessionId || delivered) return
+            delivered = true
+            timeout?.let(main::removeCallbacks)
+            timeout = null
+            main.post { if (currentSession == sessionId) stop() }
+            onFail(code)
+        }
+        if (!SpeechRecognizer.isRecognitionAvailable(ctx)) {
+            failOnce(SpeechRecognizer.ERROR_CLIENT)
+            return
+        }
         val r = try {
             SpeechRecognizer.createSpeechRecognizer(ctx.applicationContext)
         } catch (_: RuntimeException) {
@@ -61,6 +72,8 @@ object Voice {
                 val t = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
                 if (currentSession != sessionId || delivered) return
                 delivered = true
+                timeout?.let(main::removeCallbacks)
+                timeout = null
                 main.post { if (currentSession == sessionId) stop() }
                 if (t.isNullOrBlank()) onFail(SpeechRecognizer.ERROR_NO_MATCH) else onResult(t)
             }

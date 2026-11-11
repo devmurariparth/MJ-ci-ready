@@ -133,6 +133,7 @@ TASK: what is 5 plus 7
             }
             "timer" -> number("seconds")?.let { it > 0 } == true
             "web", "search" -> hasAny("q", "query")
+            "settings" -> act.str("page").lowercase() in setOf("wifi", "bluetooth", "display", "main")
             "click", "tap" -> (number("id")?.let { it >= 0 } == true) || hasAny("text")
             "type" -> hasAny("text")
             "brightness" -> {
@@ -147,7 +148,9 @@ TASK: what is 5 plus 7
             }
             "media_control", "media" -> act.str("action").lowercase() in setOf("next", "previous", "pause", "resume", "play")
             "scroll" -> act.str("dir").lowercase() in setOf("up", "down")
-            else -> true
+            "screenshot", "enter", "submit", "back", "home", "wait" -> true
+            "done", "answer", "reply", "finish" -> true
+            else -> false
         }
     }
 }

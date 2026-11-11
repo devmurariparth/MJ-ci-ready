@@ -4,9 +4,11 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: mj-ci-ready-3-0-3
@@ -16,6 +18,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 50
+    permissions:
+      contents: read
     steps:
       - name: Checkout MJ-ci-ready source
         uses: actions/checkout@v7
@@ -26,6 +30,8 @@ jobs:
           set -euo pipefail
           test -f app/build.gradle.kts
           test -f app/src/main/java/com/mj/agent/MainActivity.kt
+          test -x ./gradlew
+          test -s gradle/wrapper/gradle-wrapper.properties
           grep -q 'applicationId = "com.mj.agent"' app/build.gradle.kts
 
       - name: Set up JDK 25
@@ -45,37 +51,28 @@ jobs:
           set -euo pipefail
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;36.0.0"
 
-      - name: Set up Gradle 9.1.0
+      - name: Set up Gradle from committed wrapper
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '9.1.0'
-
-      - name: Generate Gradle 9.1.0 wrapper
-        run: gradle wrapper --gradle-version 9.1.0 --distribution-type bin
-
-      - name: Commit the Gradle wrapper for local Android Studio builds
-        if: github.ref_type == 'branch'
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties
-          if git diff --cached --quiet; then
-            echo "Gradle wrapper is already committed."
-          else
-            git commit -m "chore: add Gradle 9.1.0 wrapper [skip ci]"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
 
       - name: Verify Gradle wrapper, run Android lint and build APK
         shell: bash
         run: |
           set -euo pipefail
-          test -x ./gradlew
-          test -s gradle/wrapper/gradle-wrapper.jar
           ./gradlew --version
           ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --stacktrace
+
+      - name: Upload test and lint reports even on failure
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: MJ-ci-test-reports
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.html
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Verify and name APK
         shell: bash
@@ -93,6 +90,19 @@ jobs:
           path: MJ-v3.0.3.apk
           if-no-files-found: error
           retention-days: 30
+
+  release:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified APK
+        uses: actions/download-artifact@v7
+        with:
+          name: MJ-v3.0.3-debug-APK
+          path: release-assets
 
       - name: Publish GitHub Release with MJ-ci-ready APK
         uses: softprops/action-gh-release@v2
@@ -114,7 +124,7 @@ jobs:
             WhatsApp opens a reviewed, prefilled draft; MJ never presses Send automatically. Model replacement is staged and the previous working model is restored if the new model cannot load.
 
             This is a debug-signed test APK, not a production Play Store release. Android only permits an in-place update when the signing certificate matches the installed app. If the installed v0.5.0 build has a different debug certificate, Android may require removing that old build before installing this one; its private app data (including an imported model) may then need to be restored or imported again.
-          files: MJ-v3.0.3.apk
+          files: release-assets/MJ-v3.0.3.apk
           fail_on_unmatched_files: true
           overwrite_files: true
           make_latest: true

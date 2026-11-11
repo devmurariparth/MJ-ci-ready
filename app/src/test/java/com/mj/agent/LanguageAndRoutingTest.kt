@@ -79,4 +79,81 @@ class LanguageAndRoutingTest {
     fun taskClassifierDoesNotTreatAnOrdinaryQuestionAsADeviceCommand() {
         assertFalse(Router.looksLikeTask("What is photosynthesis?"))
     }
+
+    @Test
+    fun quickRouterDoesNotExecuteQuestionShapedRequests() {
+        assertTrue(Router.quick("What is torch mode?") == null)
+        assertTrue(Router.quick("શું ટોર્ચ છે?") == null)
+        assertTrue(Router.quick("How do I set volume to 50?") == null)
+    }
+
+    @Test
+    fun quickRouterRequiresExplicitTorchState() {
+        assertTrue(Router.quick("torch") == null)
+        assertTrue(Router.quick("ટોર્ચ") == null)
+        assertTrue(Router.quick("turn torch on")?.name == "flashlight")
+        assertTrue(Router.quick("ટોર્ચ બંધ કર")?.args?.optBoolean("on") == false)
+    }
+
+    @Test
+    fun agentParserRejectsIncompleteAndOutOfRangeActions() {
+        assertTrue(AgentPrompt.parse("""{"a":"call"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"timer","seconds":0}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"alarm","hour":25,"minute":0}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"whatsapp","to":"Rahul"}""") == null)
+    }
+
+    @Test
+    fun agentParserAcceptsValidSafeDraftActions() {
+        val call = AgentPrompt.parse("""{"a":"call","to":"Rahul"}""")
+        assertTrue(call?.name == "call")
+        val message = AgentPrompt.parse("""{"a":"whatsapp","to":"Rahul","text":"I am coming"}""")
+        assertTrue(message?.name == "whatsapp")
+    }
+    @Test
+    fun agentParserRejectsUnknownSettingsPages() {
+        assertTrue(AgentPrompt.parse("""{"a":"settings","page":"secret"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"settings","page":"wifi"}""")?.name == "settings")
+    }
+
+    @Test
+    fun agentParserHandlesBracesInsideJsonStrings() {
+        val parsed = AgentPrompt.parse("""prefix {"a":"done","msg":"literal { brace } and \\n quote"} suffix""")
+        assertTrue(parsed?.name == "done")
+    }
+
+    @Test
+    fun agentParserRejectsUnsupportedActionsAndMalformedJson() {
+        assertTrue(AgentPrompt.parse("""{"a":"launch_nuke"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"mystery_action"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"timer","seconds":"five"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"alarm","hour":7}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"alarm","hour":7.5,"minute":0}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"timer","seconds":1.5}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"media_control","action":"delete"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"scroll","dir":"sideways"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"brightness","mode":"set:101"}""") == null)
+        assertTrue(AgentPrompt.parse("""{"a":"volume","mode":"set:-1"}""") == null)
+    }
+
+    @Test
+    fun agentParserAcceptsAllCoreValidatedActionShapes() {
+        val valid = listOf(
+            """{"a":"open_app","app":"YouTube"}""",
+            """{"a":"play_music","query":"lofi"}""",
+            """{"a":"flashlight","on":true}""",
+            """{"a":"volume","mode":"mute"}""",
+            """{"a":"brightness","mode":"set:100"}""",
+            """{"a":"media_control","action":"next"}""",
+            """{"a":"settings","page":"wifi"}""",
+            """{"a":"web","q":"weather"}""",
+            """{"a":"click","id":0}""",
+            """{"a":"type","text":"hello"}""",
+            """{"a":"scroll","dir":"up"}""",
+            """{"a":"done","msg":"finished"}"""
+        )
+        valid.forEach { json -> assertTrue("Expected valid action: $json", AgentPrompt.parse(json) != null) }
+        assertTrue(AgentPrompt.parse("""{"a":"flashlight","on":"true"}""") == null)
+    }
+
 }
