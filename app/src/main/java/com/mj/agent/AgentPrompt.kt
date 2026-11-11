@@ -109,8 +109,43 @@ TASK: what is 5 plus 7
     private fun toAct(json: String): Act? = try {
         val o = JSONObject(json)
         val a = o.optString("a", o.optString("action", "")).trim().lowercase()
-        if (a !in allowedActions) null else Act(a, o)
+        if (a !in allowedActions) return null
+        val act = Act(a, o)
+        if (!validArguments(act)) return null
+        act
     } catch (e: Exception) {
         null
+    }
+
+    /** Reject incomplete or out-of-range model actions before they reach Executor. */
+    private fun validArguments(act: Act): Boolean {
+        fun hasAny(vararg keys: String) = keys.any { act.str(it).isNotBlank() }
+        fun number(key: String): Int? = act.intOrNull(key)
+        return when (act.name) {
+            "open_app", "open" -> hasAny("app", "name")
+            "call", "dial" -> hasAny("to", "name")
+            "whatsapp", "send_whatsapp", "message" -> hasAny("to", "name") && hasAny("text", "msg")
+            "alarm" -> {
+                val h = number("hour"); val m = number("minute")
+                h != null && h in 0..23 && m != null && m in 0..59
+            }
+            "timer" -> number("seconds")?.let { it > 0 } == true
+            "web", "search" -> hasAny("q", "query")
+            "click", "tap" -> (number("id")?.let { it >= 0 } == true) || hasAny("text")
+            "type" -> hasAny("text")
+            "brightness" -> {
+                val mode = act.str("mode").lowercase()
+                mode in setOf("up", "down", "max", "min") ||
+                    (mode.startsWith("set:") && mode.removePrefix("set:").toIntOrNull()?.let { it in 0..100 } == true)
+            }
+            "volume" -> {
+                val mode = act.str("mode").lowercase()
+                mode in setOf("up", "down", "max", "mute", "unmute") ||
+                    (mode.startsWith("set:") && mode.removePrefix("set:").toIntOrNull()?.let { it in 0..100 } == true)
+            }
+            "media_control", "media" -> act.str("action").lowercase() in setOf("next", "previous", "pause", "resume", "play")
+            "scroll" -> act.str("dir").lowercase() in setOf("up", "down")
+            else -> true
+        }
     }
 }
