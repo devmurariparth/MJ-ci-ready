@@ -106,9 +106,23 @@ class MJAccessibilityService : AccessibilityService() {
     fun clickIndex(i: Int): Boolean = clickNode(nodes.getOrNull(i))
 
     fun clickText(text: String): Boolean {
-        if (text.isBlank()) return false
+        val query = text.trim()
+        if (query.isEmpty()) return false
         val root = rootInActiveWindow ?: return false
-        val hit = root.findAccessibilityNodeInfosByText(text).firstOrNull() ?: return false
+
+        // Avoid tapping the first fuzzy match: it may be the wrong button.
+        // Require one exact visible label (duplicate nodes at the same bounds count once).
+        val matches = root.findAccessibilityNodeInfosByText(query).filter { node ->
+            node.isVisibleToUser &&
+                (node.text?.toString()?.trim()?.equals(query, ignoreCase = true) == true ||
+                    node.contentDescription?.toString()?.trim()?.equals(query, ignoreCase = true) == true)
+        }
+        val unique = matches.distinctBy { node ->
+            val bounds = Rect()
+            node.getBoundsInScreen(bounds)
+            "${bounds.left},${bounds.top},${bounds.right},${bounds.bottom}"
+        }
+        val hit = unique.singleOrNull() ?: return false
         return clickNode(hit)
     }
 
